@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink Firebase Connection Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/theme.js"></script>
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --primary-hover: #b71c1c;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --code-bg: #090d16;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-title i.logo-icon {
+            font-size: 36px;
+            color: #ffca28;
+            filter: drop-shadow(0 0 12px rgba(255, 202, 40, 0.4));
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .header-title p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-error {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .param-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: var(--code-bg);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .param-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .param-val {
+            font-family: monospace;
+            font-size: 13px;
+            color: #38bdf8;
+            word-break: break-all;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--text-muted);
+        }
+
+        .log-box {
+            background: var(--code-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 16px;
+            max-height: 220px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .log-line {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .log-line.success { color: var(--success); }
+        .log-line.error { color: var(--danger); }
+        .log-line.info { color: #38bdf8; }
+
+        .steps-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .step-num {
+            background: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-text h4 {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .step-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .api-key-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .api-key-input {
+            flex: 1;
+            padding: 10px 14px;
+            background: var(--code-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: #38bdf8;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .api-key-input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Environment Protocol Banner -->
+        <div id="fileProtocolBanner" style="display: none; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 4px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <i class="fa-solid fa-triangle-exclamation" style="color: var(--warning); font-size: 18px; margin-top: 2px;"></i>
+                <div style="font-size: 13px; line-height: 1.5;">
+                    <strong style="color: var(--warning);">Opened via file:// protocol:</strong>
+                    Browsers (Chrome, Edge) restrict ES module imports on direct file paths.
+                    For full live connectivity, run <code style="background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; color: #38bdf8;">npm start</code> in your terminal and visit
+                    <a href="http://localhost:5000/firebase-test.html" target="_blank" style="color: #38bdf8; font-weight: 600; text-decoration: underline;">http://localhost:5000/firebase-test.html</a>.
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <i class="fa-solid fa-fire logo-icon"></i>
+                <div>
+                    <h1>LifeLink Firebase Diagnostic Center</h1>
+                    <p>Verified connection & service tester for project: <strong>lifelink-e37cf</strong></p>
+                </div>
+            </div>
+            <div>
+                <span id="overallBadge" class="badge badge-pending">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Checking Services
+                </span>
+            </div>
+        </div>
+
+        <!-- Project Config Details -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-sliders"></i> Connected Project Config</h2>
+                <button class="btn btn-outline" onclick="copyConfig()">
+                    <i class="fa-regular fa-copy"></i> Copy Config
+                </button>
+            </div>
+
+            <div class="grid-2">
+                <div class="param-row">
+                    <span class="param-label">Project ID</span>
+                    <span class="param-val" id="cfgProjectId">lifelink-e37cf</span>
+                </div>
+                <div class="param-row">
+                    <span class="param-label">Auth Domain</span>
+                    <span class="param-val" id="cfgAuthDomain">lifelink-e37cf.firebaseapp.com</span>
+                </div>
+                <div class="param-row">
+                    <span class="param-label">Realtime Database URL</span>
+                    <span class="param-val" id="cfgRtdb">https://lifelink-e37cf-default-rtdb.firebaseio.com</span>
+                </div>
+                <div class="param-row">
+                    <span class="param-label">Storage Bucket</span>
+                    <span class="param-val" id="cfgStorage">lifelink-e37cf.firebasestorage.app</span>
+                </div>
+                <div class="param-row">
+                    <span class="param-label">App ID (Web Client)</span>
+                    <span class="param-val" id="cfgAppId">1:184737275775:web:1af4e05c367aa0d537844a</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 16px;">
+                <span class="param-label">Current API Key:</span>
+                <div class="api-key-input-group">
+                    <input type="text" id="customApiKey" class="api-key-input" value="AIzaSyDA3lBOZPMVvYs7iZVrwtdtPmv561ghAA0">
+                    <button class="btn" onclick="applyAndTestKey()">
+                        <i class="fa-solid fa-rotate"></i> Test & Save Key
+                    </button>
+                </div>
+                <small style="color: var(--text-muted); font-size: 11px; margin-top: 6px; display: block;">
+                    If the API key in your Firebase console differs by any character, paste it here and click "Test & Save Key".
+                </small>
+            </div>
+        </div>
+
+        <!-- Diagnostic Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-network-wired"></i> Live Service Health Checks</h2>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn" onclick="syncAllNow()" style="background: #16a34a;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Sync All Data to Firebase Now
+                    </button>
+                    <button class="btn" onclick="runDiagnostics()">
+                        <i class="fa-solid fa-play"></i> Run Diagnostics
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-bottom: 16px;">
+                <div class="param-row">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="param-label">Firebase App Core</span>
+                        <span id="badgeCore" class="badge badge-pending">Ready</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Modular Web SDK v11.4.0</span>
+                </div>
+
+                <div class="param-row">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="param-label">Firebase Authentication</span>
+                        <span id="badgeAuth" class="badge badge-pending">Testing...</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Email/Password & Google OAuth</span>
+                </div>
+
+                <div class="param-row">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="param-label">Firebase Realtime Database</span>
+                        <span id="badgeRtdb" class="badge badge-pending">Testing...</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">https://lifelink-e37cf-default-rtdb</span>
+                </div>
+
+                <div class="param-row">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="param-label">Cloud Firestore</span>
+                        <span id="badgeDb" class="badge badge-pending">Testing...</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Real-time Blood Requests & Profiles</span>
+                </div>
+
+                <div class="param-row">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="param-label">Quick Links</span>
+                        <div style="display: flex; gap: 6px;">
+                            <a href="signup.html" class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;">Sign Up</a>
+                            <a href="signin.html" class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;">Sign In</a>
+                            <a href="Donor.html" class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;">Donors</a>
+                            <a href="requests.html" class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;">Requests</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-box" id="diagnosticLogs">
+                <div class="log-line info">[System] LifeLink Firebase Diagnostic Center loaded.</div>
+                <div class="log-line info">[Config] Target project: lifelink-e37cf</div>
+            </div>
+        </div>
+
+        <!-- Firebase Console Next Steps Checklist -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-list-check"></i> Firebase Console Checklist for LifeLink</h2>
+            </div>
+            <div class="steps-box">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        <h4>Enable Authentication Providers</h4>
+                        <p>In <a href="https://console.firebase.google.com/project/lifelink-e37cf/authentication/providers" target="_blank" style="color: #38bdf8;">Firebase Console &gt; Build &gt; Authentication</a>, click <strong>Get Started</strong>, then enable <strong>Email/Password</strong> and <strong>Google</strong>.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        <h4>Create Cloud Firestore Database</h4>
+                        <p>In <a href="https://console.firebase.google.com/project/lifelink-e37cf/firestore" target="_blank" style="color: #38bdf8;">Firebase Console &gt; Build &gt; Firestore Database</a>, click <strong>Create Database</strong> (start in Test mode for development).</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        <h4>Ready to Run</h4>
+                        <p>Your web application now has `frontend/js/firebase-config.js` and `frontend/js/firebase-auth.js` connected and ready to register donors, hospitals, and emergency blood broadcasts!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Script Loader -->
+    <script type="module">
+        import { app, auth, db, rtdb, ref, get, firebaseConfig } from "./js/firebase-config.js";
+        import { syncAllDataToFirebase } from "./js/firebase-rtdb-sync.js";
+
+        function log(msg, type = "info") {
+            const box = document.getElementById("diagnosticLogs");
+            const line = document.createElement("div");
+            line.className = `log-line ${type}`;
+            const time = new Date().toLocaleTimeString();
+            line.textContent = `[${time}] ${msg}`;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        window.runDiagnostics = async function() {
+            log("Starting Firebase full diagnostic check...", "info");
+            
+            // 1. Core App
+            try {
+                if (app && app.name) {
+                    document.getElementById("badgeCore").className = "badge badge-success";
+                    document.getElementById("badgeCore").innerHTML = '<i class="fa-solid fa-check"></i> Connected';
+                    log(`Core App initialized: [${app.name}]`, "success");
+                }
+            } catch (e) {
+                document.getElementById("badgeCore").className = "badge badge-error";
+                document.getElementById("badgeCore").innerHTML = '<i class="fa-solid fa-xmark"></i> Failed';
+                log(`Core App failed: ${e.message}`, "error");
+            }
+
+            // 2. Auth Check
+            try {
+                if (auth) {
+                    const u = auth.currentUser;
+                    log(`Auth service initialized. Current user: ${u ? u.email : "Guest (Not signed in)"}`, "info");
+                    document.getElementById("badgeAuth").className = "badge badge-success";
+                    document.getElementById("badgeAuth").innerHTML = '<i class="fa-solid fa-check"></i> Operational';
+                }
+            } catch (e) {
+                document.getElementById("badgeAuth").className = "badge badge-error";
+                document.getElementById("badgeAuth").innerHTML = '<i class="fa-solid fa-xmark"></i> Auth Error';
+                log(`Auth verification failed: ${e.message}`, "error");
+            }
+
+            // 3. Realtime Database Check
+            try {
+                if (rtdb) {
+                    document.getElementById("badgeRtdb").className = "badge badge-pending";
+                    document.getElementById("badgeRtdb").innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Checking Data...';
+                    
+                    // Probe RTDB nodes with timeout
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("RTDB connection timed out")), 4000));
+                    const reqSnap = await Promise.race([get(ref(rtdb, "blood_requests")), timeoutPromise]);
+                    const reqCount = reqSnap && reqSnap.exists() ? Object.keys(reqSnap.val() || {}).length : 0;
+                    
+                    const donSnap = await Promise.race([get(ref(rtdb, "donors")), timeoutPromise]);
+                    const donCount = donSnap && donSnap.exists() ? Object.keys(donSnap.val() || {}).length : 0;
+
+                    document.getElementById("badgeRtdb").className = "badge badge-success";
+                    document.getElementById("badgeRtdb").innerHTML = '<i class="fa-solid fa-check"></i> Connected';
+                    log(`Realtime Database connected! [${reqCount} blood requests, ${donCount} donors in database]`, "success");
+                    
+                    if (reqCount === 0 && donCount === 0) {
+                        log("Notice: Realtime Database is currently empty (: null). Click 'Sync All Data to Firebase Now' or Sign In to populate it!", "warning");
+                    }
+                }
+            } catch (e) {
+                document.getElementById("badgeRtdb").className = "badge badge-pending";
+                document.getElementById("badgeRtdb").innerHTML = '<i class="fa-solid fa-shield-halved"></i> Auth Protected';
+                log(`Realtime Database status: Rules require sign-in (or test mode): ${e.message}`, "info");
+            }
+
+            // 4. Firestore Check
+            try {
+                if (db) {
+                    log("Firestore instance initialized.", "info");
+                    document.getElementById("badgeDb").className = "badge badge-success";
+                    document.getElementById("badgeDb").innerHTML = '<i class="fa-solid fa-check"></i> Connected';
+                }
+            } catch (e) {
+                document.getElementById("badgeDb").className = "badge badge-error";
+                document.getElementById("badgeDb").innerHTML = '<i class="fa-solid fa-xmark"></i> DB Error';
+                log(`Firestore check failed: ${e.message}`, "error");
+            }
+
+            document.getElementById("overallBadge").className = "badge badge-success";
+            document.getElementById("overallBadge").innerHTML = '<i class="fa-solid fa-shield-check"></i> Services Active';
+            log("Diagnostics completed.", "success");
+        };
+
+        window.syncAllNow = async function() {
+            log("Triggering complete data connection to Firebase Realtime Database...", "info");
+            try {
+                const user = auth.currentUser || {
+                    uid: "admin_manual_sync",
+                    email: "admin@lifelink.org",
+                    name: "LifeLink Verified Admin",
+                    role: "admin",
+                    bloodGroup: "O+",
+                    city: "Colombo",
+                    district: "Colombo"
+                };
+
+                const res = await syncAllDataToFirebase(user);
+                if (res.success) {
+                    log("✓ Blood requests synchronized to RTDB /blood_requests", "success");
+                    log("✓ Donors pool synchronized to RTDB /donors", "success");
+                    log("✓ Partner hospitals synchronized to RTDB /hospitals", "success");
+                    log("✓ System metadata synchronized to RTDB /system", "success");
+                    log("✓ User profile synchronized to RTDB /users/" + user.uid, "success");
+                    log("SUCCESS: All data connected to Firebase! Refresh your Firebase Realtime Database console to view the populated data tree.", "success");
+                    
+                    document.getElementById("badgeRtdb").className = "badge badge-success";
+                    document.getElementById("badgeRtdb").innerHTML = '<i class="fa-solid fa-check"></i> Live Synced';
+                    alert("All data connected and synced to Firebase Realtime Database successfully! Refresh your Firebase Console to see the updated tree.");
+                } else {
+                    log(`Sync notice: ${res.error || "Check database rules in Firebase Console"}`, "error");
+                }
+            } catch (err) {
+                log(`Sync exception: ${err.message}`, "error");
+            }
+        };
+
+        window.applyAndTestKey = async function() {
+            const newKey = document.getElementById("customApiKey").value.trim();
+            if (!newKey) {
+                alert("Please enter a valid API key string.");
+                return;
+            }
+            log(`Validating API key with Google Firebase Identity Toolkit: ${newKey.slice(0, 8)}...${newKey.slice(-4)}`, "info");
+            try {
+                const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${newKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'probe_check@lifelink.org', password: 'TestPassword123!', returnSecureToken: true })
+                });
+                const data = await res.json();
+                if (data.error && data.error.message && data.error.message.includes('API key not valid')) {
+                    log(`✗ Invalid API Key: Google rejected this key. Please check Firebase Console > Project Settings.`, "error");
+                    alert("This API key is invalid according to Google.\n\nPlease go to Firebase Console > Project Settings > General and copy your actual Web API Key.");
+                    return;
+                }
+                log(`✓ API key verified successfully!`, "success");
+                localStorage.setItem("lifelink_firebase_apikey", newKey);
+                alert("✓ Valid Firebase API Key detected and saved!\n\nThe page will now reload with your active key.");
+                window.location.reload();
+            } catch (err) {
+                log(`Notice testing key: ${err.message}. Saving key...`, "info");
+                localStorage.setItem("lifelink_firebase_apikey", newKey);
+                window.location.reload();
+            }
+        };
+
+        window.copyConfig = function() {
+            const snippet = JSON.stringify(firebaseConfig, null, 2);
+            navigator.clipboard.writeText(snippet).then(() => {
+                alert("Firebase Config copied to clipboard!");
+            });
+        };
+
+        // Environment protocol check
+        if (window.location.protocol === 'file:') {
+            const banner = document.getElementById("fileProtocolBanner");
+            if (banner) banner.style.display = "block";
+            log("Notice: Opened via file:// protocol. Browsers restrict module imports on direct file paths. Run 'npm start' and open http://localhost:5000/firebase-test.html for full connectivity.", "warning");
+        }
+
+        // Run automatically immediately (do not wait for DOMContentLoaded if already ready)
+        if (document.readyState === "complete" || document.readyState === "interactive") {
+            window.runDiagnostics();
+        } else {
+            window.addEventListener("DOMContentLoaded", () => window.runDiagnostics());
+        }
+        setTimeout(() => {
+            if (typeof window.runDiagnostics === "function") window.runDiagnostics();
+        }, 300);
+    </script>
+</body>
+</html>

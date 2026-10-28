@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink – Find Blood Donors on Google Maps | Live Location</title>
+    <meta name="description" content="Find verified blood donors near you on a live Google Map. Uses real-time GPS location, proximity distance search, and blood group filters across Sri Lanka.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet Fallback (Used seamlessly if Google Maps API key is restricted or offline) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <!-- Theme Script -->
+    <script src="js/theme.js"></script>
+    <!-- Google Maps API Key Config -->
+    <script src="js/maps-config.js"></script>
+    <!-- Firebase Modular SDK -->
+    <script type="module" src="js/firebase-config.js"></script>
+
+    <style>
+        /* ============================================================
+           DESIGN TOKENS & CSS VARIABLES
+        ============================================================ */
+        :root {
+            --primary: #cc1111;
+            --primary-hover: #aa0e0e;
+            --primary-glow: rgba(204, 17, 17, 0.2);
+            --light-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-dark: #111827;
+            --text-gray: #4b5563;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+            --radius: 14px;
+            --transition: all 0.25s ease;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --blue: #2563eb;
+        }
+
+        [data-theme="dark"] {
+            --light-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-dark: #f8fafc;
+            --text-gray: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+            --shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.65);
+        }
+
+        /* Base */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--light-bg);
+            color: var(--text-dark);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+        button, select, input { font-family: inherit; }
+
+        .app { padding: 18px 24px; width: 100%; max-width: 1540px; margin: 0 auto; }
+
+        /* ============================================================
+           NAVBAR
+        ============================================================ */
+        .navbar {
+            position: sticky; top: 12px; z-index: 1000;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card-bg);
+            padding: 14px 26px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .logo-wrap {
+            display: flex; align-items: center; gap: 12px;
+            color: var(--primary); font-weight: 700; font-size: 22px;
+        }
+        .logo-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, #cc1111, #8b0808);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 19px;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+        .logo-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; display: block; margin-top: -2px; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-gray); transition: color .2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); font-weight: 600; }
+        .nav-badge-pill { font-size: 10px; background: #cc1111; color: white; padding: 2px 7px; border-radius: 10px; margin-left: 3px; font-weight: 700; letter-spacing: 0.5px; }
+
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .icon-btn {
+            width: 40px; height: 40px; border-radius: 10px;
+            border: 1.5px solid var(--border); background: var(--card-bg);
+            color: var(--text-gray); font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+        .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .nbtn {
+            padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+            transition: var(--transition); text-decoration: none; border: none;
+        }
+        .nbtn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-dark); }
+        .nbtn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .nbtn-red { background: linear-gradient(135deg, #cc1111, #990b0b); color: white; box-shadow: 0 4px 14px var(--primary-glow); }
+        .nbtn-red:hover { background: #aa0e0e; transform: translateY(-1px); }
+
+        /* ============================================================
+           PAGE HEADER & LIVE BROADCAST ACTION
+        ============================================================ */
+        .page-header {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        .ph-inner {
+            display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;
+        }
+        .ph-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            font-size: 11px; font-weight: 700; color: #16a34a;
+            background: #dcfce7; padding: 4px 11px; border-radius: 20px;
+            text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
+        }
+        [data-theme="dark"] .ph-badge { background: rgba(22, 163, 74, 0.2); color: #4ade80; }
+        .page-header h1 { font-size: 26px; font-weight: 800; color: var(--text-dark); margin-bottom: 5px; }
+        .page-header p { font-size: 13.5px; color: var(--text-gray); max-width: 680px; }
+
+        .ph-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .broadcast-btn {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white; border: none; padding: 10px 18px; border-radius: 12px;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 9px;
+            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+            transition: var(--transition);
+        }
+        .broadcast-btn:hover { background: #15803d; transform: translateY(-1px); }
+        .broadcast-btn.locating { opacity: 0.8; pointer-events: none; }
+
+        .ph-stats { display: flex; gap: 16px; }
+        .ph-stat {
+            background: var(--light-bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 90px;
+        }
+        .ph-stat .n { font-size: 20px; font-weight: 800; color: var(--primary); display: block; line-height: 1.1; }
+        .ph-stat .l { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+        /* ============================================================
+           FILTER CONTROLS
+        ============================================================ */
+        .filter-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 140px 180px 180px 1fr auto auto;
+            gap: 12px;
+            align-items: end;
+        }
+        .f-col { display: flex; flex-direction: column; gap: 6px; }
+        .f-col label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .f-input-wrap {
+            position: relative; display: flex; align-items: center;
+        }
+        .f-input-wrap i {
+            position: absolute; left: 12px; color: var(--text-muted); font-size: 13px; pointer-events: none;
+        }
+        .f-select, .f-input {
+            width: 100%; padding: 10px 12px 10px 34px;
+            background: var(--light-bg); border: 1.5px solid var(--border);
+            border-radius: 10px; font-size: 13px; color: var(--text-dark);
+            outline: none; transition: var(--transition);
+        }
+        .f-select:focus, .f-input:focus { border-color: var(--primary); background: var(--card-bg); }
+
+        .f-btn {
+            padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+            border: none; transition: var(--transition); white-space: nowrap;
+        }
+        .f-btn-red { background: var(--primary); color: white; box-shadow: 0 4px 12px var(--primary-glow); }
+        .f-btn-red:hover { background: var(--primary-hover); }
+        .f-btn-near { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+        .f-btn-near:hover { background: #1d4ed8; }
+        .f-btn-near.active { background: #16a34a; }
+        .f-btn-ghost { background: var(--light-bg); border: 1.5px solid var(--border); color: var(--text-gray); }
+        .f-btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Quick Blood Group Pills */
+        .pill-row {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 14px; padding-top: 12px;
+            border-top: 1px solid var(--border); flex-wrap: wrap;
+        }
+        .pr-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-right: 4px; }
+        .bgp {
+            padding: 5px 14px; border-radius: 20px;
+            border: 1.5px solid var(--border); background: var(--card-bg);
+            color: var(--text-dark); font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: all .18s; user-select: none;
+        }
+        .bgp:hover { border-color: var(--primary); color: var(--primary); }
+        .bgp.on { color: white; border-color: transparent; }
+        .bgp[data-bg="A+"].on  { background:#dc2626; } .bgp[data-bg="A-"].on  { background:#7c3aed; }
+        .bgp[data-bg="B+"].on  { background:#d97706; } .bgp[data-bg="B-"].on  { background:#0284c7; }
+        .bgp[data-bg="O+"].on  { background:#16a34a; } .bgp[data-bg="O-"].on  { background:#059669; }
+        .bgp[data-bg="AB+"].on { background:#db2777; } .bgp[data-bg="AB-"].on { background:#9333ea; }
+
+        .live-toggle-label {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-gray); cursor: pointer;
+        }
+
+        /* ============================================================
+           MAP & SIDEBAR LAYOUT
+        ============================================================ */
+        .map-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 20px;
+            height: calc(100vh - 290px);
+            min-height: 560px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex; flex-direction: column;
+            overflow: hidden; box-shadow: var(--shadow);
+        }
+        .sb-head {
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0; background: var(--card-bg);
+        }
+        .sb-head h3 { font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+        .sb-head h3 i { color: var(--primary); }
+        .count-badge { background: var(--primary); color: white; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+        
+        .sb-scroll { overflow-y: auto; flex: 1; }
+        .sb-scroll::-webkit-scrollbar { width: 5px; }
+        .sb-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+
+        /* Donor Card in Sidebar */
+        .dc {
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+            cursor: pointer; transition: background .15s, border-left-color .15s;
+            display: flex; align-items: center; gap: 12px;
+            border-left: 3px solid transparent;
+        }
+        .dc:hover { background: var(--light-bg); }
+        .dc.lit { background: rgba(204, 17, 17, 0.08); border-left-color: var(--primary); }
+        .dc-av {
+            width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: white; flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .dc-info { flex: 1; min-width: 0; }
+        .dc-name { font-size: 14px; font-weight: 600; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dc-meta { font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+        .dc-meta i { font-size: 10px; color: var(--primary); }
+        .dc-badge-gps {
+            font-size: 9.5px; padding: 1px 7px; border-radius: 10px;
+            background: #dcfce7; color: #15803d; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;
+        }
+        [data-theme="dark"] .dc-badge-gps { background: rgba(21, 128, 61, 0.25); color: #4ade80; }
+        .dc-dist {
+            font-size: 11px; font-weight: 700; color: #2563eb; background: rgba(37, 99, 235, 0.1);
+            padding: 2px 7px; border-radius: 8px; margin-left: auto; flex-shrink: 0;
+        }
+        [data-theme="dark"] .dc-dist { color: #60a5fa; background: rgba(96, 165, 250, 0.15); }
+        .bg-tag { font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 12px; flex-shrink: 0; }
+        .dc-badge-live {
+            font-size: 9.5px; padding: 1px 7px; border-radius: 10px;
+            background: #eff6ff; color: #2563eb; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;
+            border: 1px solid rgba(37, 99, 235, 0.25);
+        }
+        [data-theme="dark"] .dc-badge-live { background: rgba(37, 99, 235, 0.2); color: #60a5fa; border-color: rgba(96, 165, 250, 0.35); }
+        .dc.dc-self {
+            border-left: 3px solid #2563eb !important;
+            background: rgba(37, 99, 235, 0.06);
+        }
+
+        /* Sidebar states */
+        .sb-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; text-align: center; gap: 12px; color: var(--text-muted); }
+        .sb-state i { font-size: 40px; opacity: 0.3; }
+        .sb-state p { font-size: 13.5px; }
+        .spinner { width: 34px; height: 34px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ============================================================
+           MAP CONTAINER & FLOATING TOOLBARS
+        ============================================================ */
+        .map-wrap {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            background: var(--card-bg);
+        }
+        #gmap, #leaflet-fallback-map { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        #leaflet-fallback-map { display: none; }
+
+        /* Floating toolbar */
+        .map-toolbar {
+            position: absolute; top: 16px; right: 16px; z-index: 500;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .mt-btn {
+            width: 42px; height: 42px;
+            background: var(--card-bg);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 16px; color: var(--text-gray);
+            box-shadow: var(--shadow-lg); transition: var(--transition);
+        }
+        .mt-btn:hover { border-color: var(--primary); color: var(--primary); transform: scale(1.06); }
+        .mt-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .mt-btn.locating { animation: pulse 1s ease infinite; color: var(--primary); }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } }
+
+        /* Map Status Indicator */
+        .map-status-pill {
+            position: absolute; top: 16px; left: 16px; z-index: 500;
+            background: var(--card-bg); border: 1.5px solid var(--border);
+            border-radius: 20px; padding: 6px 14px; font-size: 11.5px; font-weight: 600;
+            color: var(--text-gray); display: flex; align-items: center; gap: 7px;
+            box-shadow: var(--shadow);
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 8px #16a34a; }
+
+        /* Legend */
+        .map-legend {
+            position: absolute; bottom: 24px; left: 16px; z-index: 500;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 16px;
+            box-shadow: var(--shadow-lg);
+        }
+        .lg-title { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+        .lg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; }
+        .lg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-gray); }
+        .lg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+        /* API key alert banner */
+        .api-banner {
+            position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+            z-index: 600; background: #eff6ff;
+            border: 1.5px solid #3b82f6;
+            border-radius: 10px; padding: 8px 16px;
+            font-size: 12.5px; font-weight: 600; color: #1e40af;
+            display: none; align-items: center; gap: 8px;
+            box-shadow: var(--shadow-lg); white-space: nowrap;
+        }
+
+        /* ============================================================
+           CUSTOM GOOGLE MAPS & LEAFLET INFO WINDOW
+        ============================================================ */
+        .gm-style .gm-style-iw-c {
+            border-radius: 16px !important;
+            padding: 0 !important;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.2) !important;
+        }
+        .gm-style .gm-style-iw-d { overflow: hidden !important; }
+        .gm-style-iw-tc::after { display: none; }
+
+        .iw-card { width: 270px; overflow: hidden; border-radius: 16px; font-family: 'Poppins', sans-serif; background: #fff; }
+        .iw-head { padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+        .iw-av { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: white; flex-shrink: 0; }
+        .iw-name { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+        .iw-bg { font-size: 11.5px; font-weight: 800; padding: 2px 9px; border-radius: 12px; display: inline-block; }
+        .iw-gps-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; background: #dcfce7; color: #15803d; padding: 2px 7px; border-radius: 8px; font-weight: 700; margin-top: 3px; }
+        
+        .iw-body { padding: 0 16px 12px; }
+        .iw-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #4b5563; padding: 3px 0; }
+        .iw-row i { color: #cc1111; width: 14px; font-size: 12px; text-align: center; }
+        .iw-dist-badge { color: #2563eb; font-weight: 700; font-size: 12px; }
+
+        .iw-actions { padding: 10px 16px; border-top: 1px solid #e5e7eb; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .iw-btn {
+            padding: 8px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
+            text-align: center; cursor: pointer; border: none; font-family: 'Poppins', sans-serif;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            transition: all .2s; text-decoration: none;
+        }
+        .iw-call { background: #cc1111; color: white; }
+        .iw-call:hover { background: #aa0e0e; }
+        .iw-wa { background: #f3f4f6; color: #15803d; border: 1px solid #e5e7eb; }
+        .iw-wa:hover { border-color: #25d366; color: #25d366; background: #f0fdf4; }
+        .iw-dir { grid-column: 1 / -1; background: #2563eb; color: white; margin-top: 2px; }
+        .iw-dir:hover { background: #1d4ed8; }
+
+        /* Toast notification */
+        .toast {
+            position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 12px; padding: 14px 20px;
+            box-shadow: var(--shadow-lg);
+            display: flex; align-items: center; gap: 12px;
+            font-size: 13.5px; font-weight: 600; color: var(--text-dark);
+            min-width: 270px;
+            transform: translateY(80px); opacity: 0;
+            transition: all .35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast i { color: var(--primary); font-size: 16px; }
+
+        /* ============================================================
+           RESPONSIVE DESIGN
+        ============================================================ */
+        @media (max-width: 1024px) {
+            .filter-grid { grid-template-columns: 1fr 1fr; }
+            .map-layout { grid-template-columns: 1fr; height: auto; }
+            .sidebar { max-height: 320px; }
+            .map-wrap { height: 460px; }
+        }
+        @media (max-width: 768px) {
+            .navbar { padding: 12px 16px; }
+            .nav-links { display: none; }
+            .page-header { padding: 18px 20px; }
+            .page-header h1 { font-size: 22px; }
+            .ph-stats { display: none; }
+            .filter-grid { grid-template-columns: 1fr; }
+            .app { padding: 10px; }
+        }
+    </style>
+<script src="js/navbar.js"></script>
+<script type="module" src="js/firebase-auth.js"></script>
+<script type="module" src="js/auth-state.js"></script>
+</head>
+
+<body>
+<div class="app">
+
+<!-- ═══════════════ PAGE HEADER ═══════════════ -->
+    <header class="page-header">
+        <div class="ph-inner">
+            <div>
+                <div class="ph-badge"><i class="fas fa-location-crosshairs"></i> Google Maps & Live Geolocation API</div>
+                <h1>Find Donors on Live Map</h1>
+                <p>Pinpoint registered blood donors with their real GPS coordinates. Discover closest matching donors within 5 km to 50 km, see driving directions, and contact instantly.</p>
+            </div>
+            <div class="ph-actions">
+                <button class="broadcast-btn" id="btn-broadcast-live-loc" title="Broadcast your device's exact GPS location to nearby patients">
+                    <i class="fas fa-satellite-dish"></i> Update My Live Location
+                </button>
+                <div class="ph-stats">
+                    <div class="ph-stat">
+                        <span class="n" id="stat-total">10</span>
+                        <span class="l">Total Donors</span>
+                    </div>
+                    <div class="ph-stat">
+                        <span class="n" id="stat-gps">10</span>
+                        <span class="l">Live GPS Pinned</span>
+                    </div>
+                    <div class="ph-stat">
+                        <span class="n" id="stat-nearby">—</span>
+                        <span class="l">Near You</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════ FILTER CONTROLS ═══════════════ -->
+    <section class="filter-card" aria-label="Donor filters">
+        <div class="filter-grid">
+            <!-- Blood Group -->
+            <div class="f-col">
+                <label for="sel-bg">Blood Group</label>
+                <div class="f-input-wrap">
+                    <i class="fas fa-tint"></i>
+                    <select id="sel-bg" class="f-select" aria-label="Filter by blood group">
+                        <option value="">All Groups</option>
+                        <option value="A+">A+</option><option value="A-">A-</option>
+                        <option value="B+">B+</option><option value="B-">B-</option>
+                        <option value="O+">O+</option><option value="O-">O-</option>
+                        <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                    </select>
+                </div>
+            </div>
+            <!-- District -->
+            <div class="f-col">
+                <label for="sel-dist">District</label>
+                <div class="f-input-wrap">
+                    <i class="fas fa-map"></i>
+                    <select id="sel-dist" class="f-select" aria-label="Filter by district">
+                        <option value="">All 25 Districts</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Distance Radius -->
+            <div class="f-col">
+                <label for="sel-radius">Distance / Radius</label>
+                <div class="f-input-wrap">
+                    <i class="fas fa-ruler-combined"></i>
+                    <select id="sel-radius" class="f-select" aria-label="Filter by distance radius">
+                        <option value="">All Distances</option>
+                        <option value="5">Within 5 km</option>
+                        <option value="10">Within 10 km</option>
+                        <option value="25">Within 25 km</option>
+                        <option value="50">Within 50 km</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Name/City search -->
+            <div class="f-col">
+                <label for="inp-search">Search Name or Town</label>
+                <div class="f-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="inp-search" class="f-input" placeholder="e.g. Kasun, Colombo, Kandy..." aria-label="Search donor or town">
+                </div>
+            </div>
+            <!-- Action buttons -->
+            <button class="f-btn f-btn-near" id="btn-near-me" title="Use your device GPS to locate you and show distance to all donors">
+                <i class="fas fa-crosshairs"></i> Near Me
+            </button>
+            <button class="f-btn f-btn-ghost" id="btn-reset" title="Reset all filters">
+                <i class="fas fa-rotate-left"></i> Reset
+            </button>
+        </div>
+
+        <!-- Quick Blood Group Pills -->
+        <div class="pill-row" aria-label="Quick blood group filter">
+            <span class="pr-label">Quick Blood:</span>
+            <button class="bgp" data-bg="A+"  aria-label="A positive">A+</button>
+            <button class="bgp" data-bg="A-"  aria-label="A negative">A−</button>
+            <button class="bgp" data-bg="B+"  aria-label="B positive">B+</button>
+            <button class="bgp" data-bg="B-"  aria-label="B negative">B−</button>
+            <button class="bgp" data-bg="O+"  aria-label="O positive">O+</button>
+            <button class="bgp" data-bg="O-"  aria-label="O negative">O−</button>
+            <button class="bgp" data-bg="AB+" aria-label="AB positive">AB+</button>
+            <button class="bgp" data-bg="AB-" aria-label="AB negative">AB−</button>
+            
+            <label class="live-toggle-label">
+                <input type="checkbox" id="chk-gps-only">
+                <span><i class="fas fa-satellite" style="color:#16a34a"></i> Verified GPS Only</span>
+            </label>
+        </div>
+    </section>
+
+    <!-- ═══════════════ MAP + DONOR SIDEBAR ═══════════════ -->
+    <div class="map-layout">
+
+        <!-- Donor List Sidebar -->
+        <aside class="sidebar" aria-label="Donor list">
+            <div class="sb-head">
+                <h3><i class="fas fa-users"></i> Available Donors</h3>
+                <span class="count-badge" id="sb-count">0</span>
+            </div>
+            <div class="sb-scroll" id="sb-scroll">
+                <div class="sb-state" id="sb-loading">
+                    <div class="spinner"></div>
+                    <p>Loading real-time donors from database…</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Live Map Wrap -->
+        <div class="map-wrap" id="map-wrap">
+            <!-- Google Map Canvas -->
+            <div id="gmap" aria-label="Google Map showing blood donors"></div>
+            <!-- Leaflet Map Fallback Canvas (Auto-activated if Google Maps API key restricted) -->
+            <div id="leaflet-fallback-map" aria-label="Interactive map showing blood donors"></div>
+
+            <!-- Map Status Indicator -->
+            <div class="map-status-pill" id="map-status-pill">
+                <span class="status-dot"></span>
+                <span id="map-provider-text">Google Maps API · Live</span>
+            </div>
+
+            <!-- Floating map toolbar -->
+            <div class="map-toolbar">
+                <button class="mt-btn" id="btn-locate" title="Show my device location on map" aria-label="My location">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+                <button class="mt-btn" id="btn-fit" title="Zoom to show all donors" aria-label="Fit all donors">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </button>
+                <button class="mt-btn" id="btn-satellite" title="Toggle satellite aerial view" aria-label="Satellite view">
+                    <i class="fas fa-satellite"></i>
+                </button>
+                <button class="mt-btn" id="btn-toggle-provider" title="Switch between Google Maps and OpenStreetMap" aria-label="Toggle map provider">
+                    <i class="fas fa-layer-group"></i>
+                </button>
+            </div>
+
+            <!-- Blood Legend -->
+            <div class="map-legend">
+                <div class="lg-title">Blood Types</div>
+                <div class="lg-grid">
+                    <div class="lg-item"><div class="lg-dot" style="background:#dc2626"></div>A+</div>
+                    <div class="lg-item"><div class="lg-dot" style="background:#7c3aed"></div>A−</div>
+                    <div class="lg-item"><div class="lg-dot" style="background:#d97706"></div>B+</div>
+                    <div class="lg-item"><div class="lg-dot" style="background:#0284c7"></div>B−</div>
+                    <div class="lg-item"><div class="lg-dot" style="background:#16a34a"></div>O+</div>
+                    <div class="lg-item"><div class="lg-dot" style="background:#059669"></div>O−</div>
+                    <div class="lg-item"><div class="lg-dot" style="background:#db2777"></div>AB+</div>
+                    <div class="lg-item"><div class="lg-dot" style="background:#9333ea"></div>AB−</div>
+                </div>
+            </div>
+
+            <!-- API Notification Banner -->
+            <div class="api-banner" id="api-banner">
+                <i class="fas fa-info-circle"></i>
+                <span id="api-banner-text">Connected to Google Maps JavaScript API</span>
+            </div>
+        </div>
+
+    </div>
+
+</div><!-- /.app -->
+
+<!-- Toast -->
+<div class="toast" id="toast" role="alert" aria-live="polite">
+    <i class="fas fa-circle-check"></i>
+    <span id="toast-msg">Notification</span>
+</div>
+
+<script>
+/* ================================================================
+   LIFELINK – FIND DONORS ON GOOGLE MAPS WITH LIVE GEOLOCATION API
+   ================================================================ */
+
+// ── 1. ACCURATE SRI LANKA DISTRICT & CITY COORDINATES ────────────
+const SRI_LANKA_DISTRICTS = [
+    "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
+    "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
+    "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
+    "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
+    "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
+];
+
+const SRI_LANKA_COORDS = {
+    // Districts
+    "Colombo": [6.9271, 79.8612], "Gampaha": [7.0917, 79.9990], "Kalutara": [6.5853, 79.9607],
+    "Kandy": [7.2906, 80.6337], "Matale": [7.4685, 80.6234], "Nuwara Eliya": [6.9497, 80.7891],
+    "Galle": [6.0535, 80.2210], "Matara": [5.9485, 80.5353], "Hambantota": [6.1241, 81.1185],
+    "Jaffna": [9.6615, 80.0255], "Kilinochchi": [9.3983, 80.3997], "Mannar": [8.9801, 79.9046],
+    "Vavuniya": [8.7514, 80.4997], "Mullaitivu": [9.2679, 80.8121], "Batticaloa": [7.7172, 81.7001],
+    "Ampara": [7.2939, 81.6741], "Trincomalee": [8.5874, 81.2152], "Kurunegala": [7.4875, 80.3647],
+    "Puttalam": [8.0362, 79.8282], "Anuradhapura": [8.3114, 80.4037], "Polonnaruwa": [7.9403, 81.0188],
+    "Badulla": [6.9934, 81.0550], "Monaragala": [6.8726, 81.3513], "Ratnapura": [6.6828, 80.4000],
+    "Kegalle": [7.2528, 80.3464],
+    // Major Towns & Suburbs
+    "Colombo 01": [6.9344, 79.8428], "Colombo 02": [6.9218, 79.8562], "Colombo 03": [6.9064, 79.8528],
+    "Colombo 04": [6.8920, 79.8562], "Colombo 05": [6.8833, 79.8690], "Colombo 06": [6.8732, 79.8615],
+    "Colombo 07": [6.9117, 79.8646], "Dehiwala": [6.8511, 79.8653], "Mount Lavinia": [6.8344, 79.8667],
+    "Nugegoda": [6.8649, 79.8997], "Maharagama": [6.8480, 79.9265], "Moratuwa": [6.7730, 79.8816],
+    "Negombo": [7.2088, 79.8358], "Kelaniya": [6.9553, 79.9222], "Kiribathgoda": [6.9798, 79.9284],
+    "Panadura": [6.7132, 79.9074], "Peradeniya": [7.2599, 80.5976], "Karapitiya": [6.0642, 80.2308],
+    "Hikkaduwa": [6.1408, 80.1017], "Weligama": [5.9750, 80.4286], "Dambulla": [7.8742, 80.6511]
+};
+
+// ── 2. BLOOD GROUP COLORS ─────────────────────────────────────────
+const BG_COLORS = {
+    "A+": "#dc2626", "A-": "#7c3aed", "B+": "#d97706", "B-": "#0284c7",
+    "O+": "#16a34a", "O-": "#059669", "AB+": "#db2777", "AB-": "#9333ea"
+};
+const bgColor = bg => BG_COLORS[bg] || "#cc1111";
+
+function initials(name) {
+    if (!name) return "?";
+    const p = name.trim().split(/\s+/);
+    return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
+}
+
+// Haversine formula to compute distance between two GPS coordinates in kilometers
+function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// ── 3. STATE ──────────────────────────────────────────────────────
+let allDonors = [], filteredDonors = [];
+let gmap = null, googleMarkers = [], openInfoWindow = null, userMarker = null, radiusCircle = null;
+let leafletMap = null, leafletMarkers = [], userLeafletMarker = null, leafletRadiusCircle = null;
+let userCoords = null; // { lat, lng }
+let isSatellite = false;
+let isGoogleMapsActive = false;
+
+// ── 4. REALISTIC SEED DONORS (with authentic Sri Lanka coordinates)
+const SEED_DONORS = [
+    { uid: "d1", name: "Kasun Perera", bloodGroup: "O+", latitude: 6.9271, longitude: 79.8612, city: "Colombo 07", district: "Colombo", phone: "077 123 4567", locationCaptured: true, available: true },
+    { uid: "d2", name: "Ayesha Fernando", bloodGroup: "A+", latitude: 7.2906, longitude: 80.6337, city: "Kandy", district: "Kandy", phone: "071 987 6543", locationCaptured: true, available: true },
+    { uid: "d3", name: "Saman Jayasinghe", bloodGroup: "B+", latitude: 6.0535, longitude: 80.2210, city: "Galle", district: "Galle", phone: "075 555 9900", locationCaptured: true, available: true },
+    { uid: "d4", name: "Priya Wickramasinghe", bloodGroup: "AB-", latitude: 9.6615, longitude: 80.0255, city: "Jaffna", district: "Jaffna", phone: "076 444 3311", locationCaptured: true, available: true },
+    { uid: "d5", name: "Roshan Dissanayake", bloodGroup: "O-", latitude: 7.4875, longitude: 80.3647, city: "Kurunegala", district: "Kurunegala", phone: "078 222 1234", locationCaptured: true, available: true },
+    { uid: "d6", name: "Naomi Rajapaksha", bloodGroup: "A-", latitude: 6.6828, longitude: 80.4000, city: "Ratnapura", district: "Ratnapura", phone: "070 333 5566", locationCaptured: true, available: true },
+    { uid: "d7", name: "Dhammika Silva", bloodGroup: "B-", latitude: 7.2088, longitude: 79.8358, city: "Negombo", district: "Gampaha", phone: "072 111 8877", locationCaptured: true, available: true },
+    { uid: "d8", name: "Thilini Ranatunga", bloodGroup: "AB+", latitude: 8.3114, longitude: 80.4037, city: "Anuradhapura", district: "Anuradhapura", phone: "077 999 0011", locationCaptured: true, available: true },
+    { uid: "d9", name: "Kavinda Mendis", bloodGroup: "O+", latitude: 5.9485, longitude: 80.5353, city: "Matara", district: "Matara", phone: "071 667 8844", locationCaptured: true, available: true },
+    { uid: "d10", name: "Fathima Haniffa", bloodGroup: "A+", latitude: 7.7172, longitude: 81.7001, city: "Batticaloa", district: "Batticaloa", phone: "076 345 6789", locationCaptured: true, available: true }
+];
+
+// ── 5. GOOGLE MAPS STYLES ─────────────────────────────────────────
+function getGoogleMapStyles() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (!isDark) return [];
+    return [
+        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+        { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+        { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+        { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+        { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+        { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+        { featureType: "poi", stylers: [{ visibility: "off" }] }
+    ];
+}
+
+// ── 6. SVG MARKER CREATION ─────────────────────────────────────────
+function createSvgMarkerIcon(bg, hasGPS) {
+    const color = bgColor(bg);
+    const ring = hasGPS ? '#22c55e' : '#fbbf24';
+    const fs = (bg || '').length > 2 ? 8 : 10;
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="56" viewBox="0 0 42 56">
+      <defs>
+        <filter id="ds" x="-20%" y="-10%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="rgba(0,0,0,0.4)"/>
+        </filter>
+      </defs>
+      <path d="M21 0C9.4 0 0 9.4 0 21c0 15.5 21 35 21 35s21-19.5 21-35C42 9.4 32.6 0 21 0z"
+            fill="${color}" filter="url(#ds)"/>
+      <circle cx="21" cy="21" r="13" fill="rgba(255,255,255,0.25)"/>
+      <circle cx="21" cy="21" r="11.5" fill="none" stroke="${ring}" stroke-width="2.5"/>
+      <text x="21" y="25" text-anchor="middle" font-family="Poppins,Arial,sans-serif"
+            font-size="${fs}" font-weight="800" fill="white" letter-spacing="-0.5">${bg || '?'}</text>
+    </svg>`;
+
+    return {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+        scaledSize: (typeof google !== 'undefined' && google.maps) ? new google.maps.Size(42, 56) : null,
+        anchor: (typeof google !== 'undefined' && google.maps) ? new google.maps.Point(21, 56) : null
+    };
+}
+
+// ── 7. INITIALIZE GOOGLE MAPS ─────────────────────────────────────
+let googleTilesLoaded = false;
+
+window.initGoogleMap = function () {
+    try {
+        isGoogleMapsActive = true;
+        document.getElementById('gmap').style.display = 'block';
+        document.getElementById('leaflet-fallback-map').style.display = 'none';
+        document.getElementById('map-provider-text').textContent = 'Google Maps API · Live';
+
+        gmap = new google.maps.Map(document.getElementById('gmap'), {
+            center: { lat: 7.8731, lng: 80.7718 }, // Sri Lanka center
+            zoom: 8,
+            mapTypeId: 'roadmap',
+            styles: getGoogleMapStyles(),
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControlOptions: { position: google.maps.ControlPosition.LEFT_TOP }
+        });
+
+        // Watchdog: verify Google Maps tiles actually load within 3.5 seconds
+        google.maps.event.addListenerOnce(gmap, 'tilesloaded', () => {
+            googleTilesLoaded = true;
+            console.log("✓ Google Maps tiles loaded successfully!");
+        });
+
+        setTimeout(() => {
+            if (!googleTilesLoaded && isGoogleMapsActive) {
+                console.warn("Google Maps tiles did not render in 3.5s. Seamlessly switching to Leaflet OpenStreetMap fallback...");
+                activateLeafletFallback();
+            }
+        }, 3500);
+
+        renderMarkers(filteredDonors.length ? filteredDonors : allDonors);
+    } catch (err) {
+        console.warn("Google Maps init exception. Falling back to Leaflet:", err);
+        activateLeafletFallback();
+    }
+};
+
+// Handle Google Maps authentication failures seamlessly
+window.gm_authFailure = function () {
+    console.warn("Google Maps key authorization notice. Seamlessly activating Leaflet fallback...");
+    activateLeafletFallback();
+};
+
+// ── 8. LEAFLET FALLBACK ───────────────────────────────────────────
+function activateLeafletFallback() {
+    isGoogleMapsActive = false;
+    document.getElementById('gmap').style.display = 'none';
+    const lDiv = document.getElementById('leaflet-fallback-map');
+    lDiv.style.display = 'block';
+    document.getElementById('map-provider-text').textContent = 'OpenStreetMap · Live';
+
+    if (!leafletMap) {
+        leafletMap = L.map('leaflet-fallback-map', {
+            zoomControl: false
+        }).setView([7.8731, 80.7718], 8);
+        L.control.zoom({ position: 'topleft' }).addTo(leafletMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(leafletMap);
+    }
+
+    setTimeout(() => {
+        if (leafletMap) leafletMap.invalidateSize();
+    }, 150);
+
+    renderMarkers(filteredDonors.length ? filteredDonors : allDonors);
+}
+
+// Map Provider Manual Toggle
+function toggleMapProvider() {
+    if (isGoogleMapsActive) {
+        activateLeafletFallback();
+        showToast('Switched to OpenStreetMap');
+    } else {
+        if (typeof google !== 'undefined' && google.maps && gmap) {
+            isGoogleMapsActive = true;
+            document.getElementById('leaflet-fallback-map').style.display = 'none';
+            document.getElementById('gmap').style.display = 'block';
+            document.getElementById('map-provider-text').textContent = 'Google Maps API · Live';
+            google.maps.event.trigger(gmap, 'resize');
+            renderMarkers(filteredDonors.length ? filteredDonors : allDonors);
+            showToast('Switched to Google Maps API');
+        } else if (typeof google !== 'undefined' && google.maps) {
+            window.initGoogleMap();
+            showToast('Initializing Google Maps API...');
+        } else {
+            showToast('Google Maps API is restricted. Running on OpenStreetMap.');
+        }
+    }
+}
+
+// ── 9. LOAD DONORS (FIRESTORE + REALTIME DATABASE + LOCAL HYDRATION) ───────
+let firebaseListenersBound = false;
+
+function parseDonorsFromDocs(docs) {
+    const list = [];
+    docs.forEach(doc => {
+        const data = doc.data ? doc.data() : doc;
+        const uid = doc.id || data.uid;
+        
+        // Resolve accurate coordinates
+        let lat = (typeof data.latitude === 'number' && !isNaN(data.latitude)) ? data.latitude : null;
+        let lng = (typeof data.longitude === 'number' && !isNaN(data.longitude)) ? data.longitude : null;
+        let hasGPS = Boolean(data.locationCaptured && lat && lng);
+
+        if (!lat || !lng) {
+            const c = SRI_LANKA_COORDS[data.city] || SRI_LANKA_COORDS[data.district] || [7.8731, 80.7718];
+            lat = c[0] + (Math.random() - 0.5) * 0.02;
+            lng = c[1] + (Math.random() - 0.5) * 0.02;
+        }
+
+        list.push({
+            ...data,
+            uid: uid,
+            name: data.name || data.fullName || 'Registered Donor',
+            bloodGroup: data.bloodGroup || 'O+',
+            city: data.city || data.district || 'Colombo',
+            district: data.district || data.city || 'Colombo',
+            phone: data.phone || '',
+            email: data.email || '',
+            latitude: lat,
+            longitude: lng,
+            locationCaptured: hasGPS,
+            isLiveRegistered: Boolean(data.isLiveRegistered || data.role === 'donor' || data.source === 'firebase'),
+            available: data.available !== false
+        });
+    });
+    return list;
+}
+
+function hydrateInitialDonors() {
+    const initialList = [];
+
+    // Check logged in user session in localStorage
+    try {
+        const rawSession = localStorage.getItem('lifelink_session');
+        if (rawSession) {
+            const user = JSON.parse(rawSession);
+            if (user && (user.role === 'donor' || user.bloodGroup)) {
+                initialList.push({
+                    uid: user.uid || 'current_user',
+                    name: (user.name || user.fullName || 'Registered Donor') + ' (You)',
+                    bloodGroup: user.bloodGroup || 'O+',
+                    city: user.city || 'Colombo',
+                    district: user.district || user.city || 'Colombo',
+                    phone: user.phone || '',
+                    email: user.email || '',
+                    latitude: (typeof user.latitude === 'number' && !isNaN(user.latitude)) ? user.latitude : 6.9271,
+                    longitude: (typeof user.longitude === 'number' && !isNaN(user.longitude)) ? user.longitude : 79.8612,
+                    locationCaptured: Boolean(user.locationCaptured),
+                    isLiveRegistered: true,
+                    isCurrentUser: true,
+                    available: true
+                });
+            }
+        }
+    } catch (e) {
+        console.warn("Session donor notice:", e);
+    }
+
+    // Check previously registered donors in localStorage
+    try {
+        const rawReg = localStorage.getItem('lifelink_registered_donors');
+        if (rawReg) {
+            const regDonors = JSON.parse(rawReg);
+            if (Array.isArray(regDonors)) {
+                regDonors.forEach(r => {
+                    if (!initialList.some(m => m.uid === r.uid || (r.email && m.email === r.email))) {
+                        initialList.push({
+                            uid: r.uid || 'reg_' + Math.random().toString(36).substr(2, 6),
+                            name: r.name || r.fullName || 'Registered Donor',
+                            bloodGroup: r.bloodGroup || 'O+',
+                            city: r.city || 'Colombo',
+                            district: r.district || r.city || 'Colombo',
+                            phone: r.phone || '',
+                            email: r.email || '',
+                            latitude: (typeof r.latitude === 'number' && !isNaN(r.latitude)) ? r.latitude : 6.9271,
+                            longitude: (typeof r.longitude === 'number' && !isNaN(r.longitude)) ? r.longitude : 79.8612,
+                            locationCaptured: Boolean(r.locationCaptured),
+                            isLiveRegistered: true,
+                            available: true
+                        });
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.warn("Stored donors notice:", e);
+    }
+
+    // Append seed donors without duplicating email or phone
+    SEED_DONORS.forEach(seed => {
+        if (!initialList.some(m => (m.email && m.email === seed.email) || (m.phone && m.phone === seed.phone))) {
+            initialList.push({ ...seed, isLiveRegistered: false });
+        }
+    });
+
+    allDonors = parseDonorsFromDocs(initialList);
+    applyFilters();
+}
+
+function bindFirebaseDonors(fb) {
+    if (!fb || firebaseListenersBound) return;
+    firebaseListenersBound = true;
+    console.log("LifeLink: Attaching real-time Firebase donor synchronizers...");
+
+    const { rtdb, ref, onValue, db, collection, onSnapshot, query, where, getDocs } = fb;
+
+    function mergeIncomingDonors(incomingList, sourceLabel) {
+        if (!Array.isArray(incomingList) || incomingList.length === 0) return;
+
+        let hasNew = false;
+        const currentList = [...allDonors];
+        const storedSession = JSON.parse(localStorage.getItem('lifelink_session') || '{}');
+
+        incomingList.forEach(incoming => {
+            const uid = incoming.uid || incoming.id;
+            const existingIdx = currentList.findIndex(d => 
+                (uid && d.uid === uid) || 
+                (incoming.email && d.email === incoming.email) || 
+                (incoming.phone && d.phone === incoming.phone)
+            );
+
+            let lat = (typeof incoming.latitude === 'number' && !isNaN(incoming.latitude)) ? incoming.latitude : null;
+            let lng = (typeof incoming.longitude === 'number' && !isNaN(incoming.longitude)) ? incoming.longitude : null;
+            let hasGPS = Boolean(incoming.locationCaptured && lat && lng);
+
+            if (!lat || !lng) {
+                const c = SRI_LANKA_COORDS[incoming.city] || SRI_LANKA_COORDS[incoming.district] || [7.8731, 80.7718];
+                lat = c[0] + (Math.random() - 0.5) * 0.02;
+                lng = c[1] + (Math.random() - 0.5) * 0.02;
+            }
+
+            const isCurrent = Boolean(
+                (uid && uid === storedSession.uid) ||
+                (incoming.email && incoming.email === storedSession.email)
+            );
+            const rawName = incoming.name || incoming.fullName || 'Registered Donor';
+            const cleanName = isCurrent ? (rawName.replace(/\s*\(You\)/, '') + ' (You)') : rawName;
+
+            const normalizedDonor = {
+                ...incoming,
+                uid: uid || ('fb_' + Math.random().toString(36).substr(2, 6)),
+                name: cleanName,
+                bloodGroup: incoming.bloodGroup || 'O+',
+                city: incoming.city || incoming.district || 'Colombo',
+                district: incoming.district || incoming.city || 'Colombo',
+                phone: incoming.phone || '',
+                email: incoming.email || '',
+                latitude: lat,
+                longitude: lng,
+                locationCaptured: hasGPS,
+                isLiveRegistered: true,
+                isCurrentUser: isCurrent,
+                available: incoming.available !== false
+            };
+
+            if (existingIdx >= 0) {
+                currentList[existingIdx] = { ...currentList[existingIdx], ...normalizedDonor };
+            } else {
+                currentList.unshift(normalizedDonor);
+                hasNew = true;
+            }
+        });
+
+        allDonors = currentList;
+        applyFilters();
+
+        if (hasNew) {
+            showToast(`✓ Live registered donors synced from ${sourceLabel}!`);
+        }
+    }
+
+    // A. Realtime Database /donors
+    if (rtdb && ref && onValue) {
+        try {
+            onValue(ref(rtdb, 'donors'), (snapshot) => {
+                const val = snapshot.val();
+                if (val && typeof val === 'object') {
+                    const rtdbList = Object.keys(val).map(k => ({
+                        ...val[k],
+                        uid: val[k].uid || val[k].id || k
+                    }));
+                    mergeIncomingDonors(rtdbList, 'Realtime Database');
+                }
+            }, (err) => console.warn("RTDB donors notice:", err.message));
+        } catch (e) {
+            console.warn("RTDB donors error:", e);
+        }
+
+        // B. Realtime Database /users (catch users registered with role='donor')
+        try {
+            onValue(ref(rtdb, 'users'), (snapshot) => {
+                const val = snapshot.val();
+                if (val && typeof val === 'object') {
+                    const userDonors = Object.keys(val)
+                        .map(k => ({ ...val[k], uid: val[k].uid || k }))
+                        .filter(u => u.role === 'donor' || u.bloodGroup);
+                    mergeIncomingDonors(userDonors, 'Firebase Users');
+                }
+            }, (err) => console.warn("RTDB users notice:", err.message));
+        } catch (e) {
+            console.warn("RTDB users error:", e);
+        }
+    }
+
+    // C. Cloud Firestore collection 'users'
+    if (db && collection && onSnapshot) {
+        try {
+            const usersRef = collection(db, 'users');
+            onSnapshot(usersRef, (snapshot) => {
+                const fsList = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data && (data.role === 'donor' || data.bloodGroup)) {
+                        fsList.push({ ...data, uid: doc.id });
+                    }
+                });
+                if (fsList.length > 0) {
+                    mergeIncomingDonors(fsList, 'Cloud Firestore');
+                }
+            }, (err) => {
+                console.warn("Firestore snapshot notice:", err.message);
+                if (getDocs && query && where) {
+                    getDocs(query(collection(db, 'users'), where('role', '==', 'donor')))
+                        .then(snap => {
+                            const fallbackList = [];
+                            snap.forEach(d => fallbackList.push({ ...d.data(), uid: d.id }));
+                            mergeIncomingDonors(fallbackList, 'Cloud Firestore');
+                        }).catch(() => {});
+                }
+            });
+        } catch (e) {
+            console.warn("Firestore listener error:", e);
+        }
+
+        // D. Cloud Firestore collection 'donors'
+        try {
+            onSnapshot(collection(db, 'donors'), (snapshot) => {
+                const fsDonors = [];
+                snapshot.forEach(doc => fsDonors.push({ ...doc.data(), uid: doc.id }));
+                if (fsDonors.length > 0) {
+                    mergeIncomingDonors(fsDonors, 'Cloud Firestore Donors');
+                }
+            }, () => {});
+        } catch (e) {}
+    }
+}
+
+function loadDonors() {
+    // 1. Initial immediate local hydration so page is NEVER blank or stuck in spinner
+    hydrateInitialDonors();
+
+    // 2. Connect to Firebase if already loaded
+    if (window.LifeLinkFirebase) {
+        bindFirebaseDonors(window.LifeLinkFirebase);
+    }
+}
+
+// ── 10. RENDER MARKERS ON ACTIVE MAP ──────────────────────────────
+function renderMarkers(donors) {
+    // 1. Google Maps Rendering
+    if (isGoogleMapsActive && gmap) {
+        googleMarkers.forEach(m => m.setMap(null));
+        googleMarkers = [];
+        if (openInfoWindow) { openInfoWindow.close(); openInfoWindow = null; }
+
+        donors.forEach(donor => {
+            const pos = { lat: donor.latitude, lng: donor.longitude };
+            donor._pos = pos;
+
+            const marker = new google.maps.Marker({
+                position: pos,
+                map: gmap,
+                icon: createSvgMarkerIcon(donor.bloodGroup, donor.locationCaptured),
+                title: `${donor.name || 'Donor'} (${donor.bloodGroup})`,
+                animation: google.maps.Animation.DROP
+            });
+
+            const iwContent = buildInfoWindowHtml(donor);
+            const iw = new google.maps.InfoWindow({ content: iwContent, maxWidth: 280 });
+
+            marker.addListener('click', () => {
+                if (openInfoWindow) openInfoWindow.close();
+                iw.open({ anchor: marker, map: gmap });
+                openInfoWindow = iw;
+                highlightSidebarCard(donor.uid);
+            });
+
+            donor._marker = marker;
+            donor._iw = iw;
+            googleMarkers.push(marker);
+        });
+    }
+
+    // 2. Leaflet Fallback Rendering
+    if (!isGoogleMapsActive && leafletMap) {
+        leafletMarkers.forEach(m => leafletMap.removeLayer(m));
+        leafletMarkers = [];
+
+        donors.forEach(donor => {
+            const pos = [donor.latitude, donor.longitude];
+            donor._pos = { lat: donor.latitude, lng: donor.longitude };
+
+            const color = bgColor(donor.bloodGroup);
+            const customIcon = L.divIcon({
+                className: 'custom-leaflet-pin',
+                html: `<div style="background:${color};width:32px;height:32px;border-radius:50%;color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;border:2.5px solid ${donor.locationCaptured?'#22c55e':'#fff'};box-shadow:0 3px 10px rgba(0,0,0,0.35);font-family:Poppins,sans-serif;">${donor.bloodGroup}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            const marker = L.marker(pos, { icon: customIcon }).addTo(leafletMap);
+            marker.bindPopup(buildInfoWindowHtml(donor));
+            marker.on('click', () => highlightSidebarCard(donor.uid));
+
+            donor._lmarker = marker;
+            leafletMarkers.push(marker);
+        });
+    }
+
+    // Update Counter Statistics
+    document.getElementById('sb-count').textContent = donors.length;
+    document.getElementById('stat-total').textContent = allDonors.length;
+    document.getElementById('stat-gps').textContent = allDonors.filter(d => d.locationCaptured).length;
+    
+    if (userCoords) {
+        const withinRadius = donors.filter(d => d._distance !== undefined && d._distance <= 50).length;
+        document.getElementById('stat-nearby').textContent = withinRadius;
+    }
+}
+
+// ── 11. BUILD RICH INFO WINDOW HTML ───────────────────────────────
+function buildInfoWindowHtml(donor) {
+    const color = bgColor(donor.bloodGroup || 'O+');
+    const ini = initials(donor.name);
+    const name = donor.name || 'Verified Donor';
+    const bg = donor.bloodGroup || '?';
+    const city = donor.city || donor.district || 'Sri Lanka';
+    const phone = donor.phone || '';
+    const cleanPhone = phone.replace(/\s+/g, '');
+    const wa = cleanPhone.startsWith('0') ? '94' + cleanPhone.substring(1) : cleanPhone;
+    const hasGPS = donor.locationCaptured;
+    const isLive = donor.isLiveRegistered;
+    const isSelf = donor.isCurrentUser;
+    const distStr = donor._distance !== undefined ? `<div class="iw-row"><i class="fas fa-location-arrow"></i> <span class="iw-dist-badge">${donor._distance.toFixed(1)} km away</span></div>` : '';
+
+    return `
+    <div class="iw-card">
+        <div class="iw-head" style="background:linear-gradient(135deg, ${color}20, ${color}08)">
+            <div class="iw-av" style="background:${color}">${ini}</div>
+            <div>
+                <div class="iw-name">${name}</div>
+                <span class="iw-bg" style="background:${color};color:white">${bg}</span>
+                ${isSelf ? '<span class="iw-gps-badge" style="background:#dbeafe;color:#1e40af;"><i class="fas fa-user-check"></i> You</span>' : ''}
+                ${isLive && !isSelf ? '<span class="iw-gps-badge" style="background:#eff6ff;color:#2563eb;"><i class="fas fa-certificate"></i> Registered Donor</span>' : ''}
+                ${hasGPS ? '<span class="iw-gps-badge"><i class="fas fa-satellite"></i> Live GPS</span>' : ''}
+            </div>
+        </div>
+        <div class="iw-body">
+            <div class="iw-row"><i class="fas fa-map-marker-alt"></i> ${city}</div>
+            ${distStr}
+            <div class="iw-row"><i class="fas fa-phone"></i> ${phone || 'Available via App'}</div>
+        </div>
+        <div class="iw-actions">
+            ${phone ? `<a href="tel:${cleanPhone}" class="iw-btn iw-call"><i class="fas fa-phone"></i> Call</a>` : ''}
+            ${phone ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener" class="iw-btn iw-wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>` : ''}
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${donor.latitude},${donor.longitude}" target="_blank" rel="noopener" class="iw-btn iw-dir">
+                <i class="fas fa-directions"></i> Get Directions
+            </a>
+        </div>
+    </div>`;
+}
+
+// ── 12. SIDEBAR RENDERING ─────────────────────────────────────────
+function renderSidebar(donors) {
+    const el = document.getElementById('sb-scroll');
+    if (!donors.length) {
+        el.innerHTML = `
+        <div class="sb-state">
+            <i class="fas fa-user-slash"></i>
+            <p>No matching donors found in this radius or group. Try expanding your search filters.</p>
+        </div>`;
+        return;
+    }
+
+    el.innerHTML = donors.map(d => {
+        const color = bgColor(d.bloodGroup || 'O+');
+        const ini = initials(d.name);
+        const loc = d.city || d.district || 'Sri Lanka';
+        const uid = d.uid;
+        const distBadge = d._distance !== undefined ? `<span class="dc-dist">${d._distance.toFixed(1)} km</span>` : '';
+        const isSelfBadge = d.isCurrentUser ? `<span class="dc-badge-live" style="background:#eff6ff;color:#1d4ed8;font-weight:800;"><i class="fas fa-user-check"></i> You</span>` : '';
+        const isLiveBadge = (!d.isCurrentUser && d.isLiveRegistered) ? `<span class="dc-badge-live"><i class="fas fa-certificate"></i> Registered</span>` : '';
+        const gpsBadge = d.locationCaptured ? `<span class="dc-badge-gps"><i class="fas fa-satellite"></i> GPS</span>` : '';
+
+        return `
+        <div class="dc ${d.isCurrentUser ? 'dc-self' : ''}" id="dc-${uid}" onclick="flyToDonor('${uid}')" role="button" tabindex="0">
+            <div class="dc-av" style="background:${color}">${ini}</div>
+            <div class="dc-info">
+                <div class="dc-name">${d.name || 'Anonymous Donor'}</div>
+                <div class="dc-meta">
+                    <i class="fas fa-map-marker-alt"></i> ${loc}
+                    ${isSelfBadge}
+                    ${isLiveBadge}
+                    ${gpsBadge}
+                </div>
+            </div>
+            ${distBadge}
+            <span class="bg-tag" style="background:${color};color:white">${d.bloodGroup || '?'}</span>
+        </div>`;
+    }).join('');
+}
+
+function highlightSidebarCard(uid) {
+    document.querySelectorAll('.dc').forEach(c => c.classList.remove('lit'));
+    const card = document.getElementById('dc-' + uid);
+    if (card) {
+        card.classList.add('lit');
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+window.flyToDonor = function (uid) {
+    const d = filteredDonors.find(x => x.uid === uid);
+    if (!d) return;
+
+    if (isGoogleMapsActive && gmap) {
+        gmap.panTo({ lat: d.latitude, lng: d.longitude });
+        gmap.setZoom(14);
+        if (openInfoWindow) openInfoWindow.close();
+        if (d._iw && d._marker) {
+            d._iw.open({ anchor: d._marker, map: gmap });
+            openInfoWindow = d._iw;
+        }
+    } else if (leafletMap && d._lmarker) {
+        leafletMap.setView([d.latitude, d.longitude], 14, { animate: true });
+        d._lmarker.openPopup();
+    }
+
+    highlightSidebarCard(uid);
+};
+
+// ── 13. FIT BOUNDS / ZOOM TO ALL DONORS ───────────────────────────
+function fitAll() {
+    if (!filteredDonors.length) {
+        if (isGoogleMapsActive && gmap) { gmap.setCenter({ lat: 7.8731, lng: 80.7718 }); gmap.setZoom(8); }
+        else if (leafletMap) { leafletMap.setView([7.8731, 80.7718], 8); }
+        return;
+    }
+
+    if (isGoogleMapsActive && gmap) {
+        const bounds = new google.maps.LatLngBounds();
+        filteredDonors.forEach(d => bounds.extend({ lat: d.latitude, lng: d.longitude }));
+        if (userCoords) bounds.extend(userCoords);
+        gmap.fitBounds(bounds, 50);
+    } else if (leafletMap) {
+        const group = L.featureGroup(leafletMarkers);
+        if (userLeafletMarker) group.addLayer(userLeafletMarker);
+        leafletMap.fitBounds(group.getBounds().pad(0.1));
+    }
+}
+
+// ── 14. "NEAR ME" & DEVICE GEOLOCATION API ────────────────────────
+function requestUserLocation(autoFit = true) {
+    const btn = document.getElementById('btn-locate');
+    const nearBtn = document.getElementById('btn-near-me');
+    btn.classList.add('locating');
+    nearBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Locating...';
+
+    if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your browser.');
+        btn.classList.remove('locating');
+        nearBtn.innerHTML = '<i class="fas fa-crosshairs"></i> Near Me';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            btn.classList.remove('locating');
+            nearBtn.classList.add('active');
+            nearBtn.innerHTML = '<i class="fas fa-check"></i> Near Me Active';
+
+            userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            renderUserLocationMarker(userCoords);
+            calculateDistancesAndSort();
+            applyFilters();
+
+            if (autoFit) {
+                if (isGoogleMapsActive && gmap) {
+                    gmap.panTo(userCoords);
+                    gmap.setZoom(13);
+                } else if (leafletMap) {
+                    leafletMap.setView([userCoords.lat, userCoords.lng], 13);
+                }
+            }
+
+            showToast(`Location detected! Showing donors sorted by distance.`);
+        },
+        err => {
+            btn.classList.remove('locating');
+            nearBtn.innerHTML = '<i class="fas fa-crosshairs"></i> Near Me';
+            showToast('Unable to get your location. Please check browser permissions.');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+function renderUserLocationMarker(pos) {
+    // Google Maps User Marker
+    if (isGoogleMapsActive && gmap) {
+        if (userMarker) userMarker.setMap(null);
+        userMarker = new google.maps.Marker({
+            position: pos,
+            map: gmap,
+            title: "Your Location",
+            zIndex: 999,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 9,
+                fillColor: '#2563eb',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 3
+            }
+        });
+
+        const userIw = new google.maps.InfoWindow({
+            content: '<div style="font-family:Poppins,sans-serif;font-size:12.5px;font-weight:700;padding:4px 8px;color:#1e3a8a;"><i class="fas fa-circle-dot" style="color:#2563eb;"></i> Your Current Location</div>'
+        });
+        userMarker.addListener('click', () => userIw.open({ anchor: userMarker, map: gmap }));
+    }
+
+    // Leaflet User Marker
+    if (!isGoogleMapsActive && leafletMap) {
+        if (userLeafletMarker) leafletMap.removeLayer(userLeafletMarker);
+        userLeafletMarker = L.circleMarker([pos.lat, pos.lng], {
+            radius: 9,
+            fillColor: '#2563eb',
+            color: '#ffffff',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 1
+        }).addTo(leafletMap);
+        userLeafletMarker.bindPopup('<b>Your Current Location</b>');
+    }
+}
+
+function updateRadiusZone(radiusKm) {
+    if (!userCoords) return;
+
+    if (isGoogleMapsActive && gmap) {
+        if (radiusCircle) radiusCircle.setMap(null);
+        if (radiusKm) {
+            radiusCircle = new google.maps.Circle({
+                map: gmap,
+                radius: radiusKm * 1000,
+                center: userCoords,
+                fillColor: '#2563eb',
+                fillOpacity: 0.12,
+                strokeColor: '#2563eb',
+                strokeOpacity: 0.45,
+                strokeWeight: 1.5
+            });
+        }
+    }
+
+    if (!isGoogleMapsActive && leafletMap) {
+        if (leafletRadiusCircle) leafletMap.removeLayer(leafletRadiusCircle);
+        if (radiusKm) {
+            leafletRadiusCircle = L.circle([userCoords.lat, userCoords.lng], {
+                radius: radiusKm * 1000,
+                color: '#2563eb',
+                fillColor: '#2563eb',
+                fillOpacity: 0.12,
+                weight: 1.5
+            }).addTo(leafletMap);
+        }
+    }
+}
+
+function calculateDistancesAndSort() {
+    if (!userCoords) return;
+
+    allDonors.forEach(d => {
+        d._distance = calculateHaversineKm(userCoords.lat, userCoords.lng, d.latitude, d.longitude);
+    });
+}
+
+// ── 15. BROADCAST / UPDATE MY LIVE LOCATION (FOR DONORS) ──────────
+async function broadcastLiveLocation() {
+    const btn = document.getElementById('btn-broadcast-live-loc');
+    btn.classList.add('locating');
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Getting GPS Coords...';
+
+    if (!navigator.geolocation) {
+        showToast('Geolocation is not supported on this browser.');
+        btn.classList.remove('locating');
+        btn.innerHTML = '<i class="fas fa-satellite-dish"></i> Update My Live Location';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        async pos => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const acc = pos.coords.accuracy;
+
+            btn.classList.remove('locating');
+            btn.innerHTML = '<i class="fas fa-circle-check"></i> Location Broadcasted!';
+            btn.style.background = 'linear-gradient(135deg, #15803d, #166534)';
+
+            const stored = JSON.parse(localStorage.getItem('lifelink_session') || '{}');
+            const uid = stored.uid || ('donor_' + Math.random().toString(36).substr(2, 7));
+            stored.uid = uid;
+            stored.latitude = lat;
+            stored.longitude = lng;
+            stored.locationCaptured = true;
+            stored.locationUpdatedAt = new Date().toISOString();
+            localStorage.setItem('lifelink_session', JSON.stringify(stored));
+
+            // Also update lifelink_registered_donors in localStorage
+            try {
+                const regList = JSON.parse(localStorage.getItem('lifelink_registered_donors') || '[]');
+                const idx = regList.findIndex(r => r.uid === uid || (stored.email && r.email === stored.email));
+                if (idx >= 0) regList[idx] = stored;
+                else regList.unshift(stored);
+                localStorage.setItem('lifelink_registered_donors', JSON.stringify(regList));
+            } catch (_) {}
+
+            // Save to Firebase RTDB and Firestore
+            const fb = window.LifeLinkFirebase;
+            if (fb) {
+                // 1. RTDB Update
+                if (fb.rtdb && fb.ref && fb.set) {
+                    try {
+                        const payload = {
+                            id: uid,
+                            uid: uid,
+                            name: stored.name || stored.fullName || 'Registered Donor',
+                            bloodGroup: stored.bloodGroup || 'O+',
+                            city: stored.city || 'My Device GPS',
+                            district: stored.district || stored.city || 'Colombo',
+                            latitude: lat,
+                            longitude: lng,
+                            phone: stored.phone || '',
+                            email: stored.email || '',
+                            available: true,
+                            locationCaptured: true,
+                            updatedAt: Date.now()
+                        };
+                        fb.set(fb.ref(fb.rtdb, `donors/${uid}`), payload).catch(() => {});
+                        fb.set(fb.ref(fb.rtdb, `users/${uid}/latitude`), lat).catch(() => {});
+                        fb.set(fb.ref(fb.rtdb, `users/${uid}/longitude`), lng).catch(() => {});
+                        fb.set(fb.ref(fb.rtdb, `users/${uid}/locationCaptured`), true).catch(() => {});
+                    } catch (e) {
+                        console.warn("RTDB location update notice:", e);
+                    }
+                }
+
+                // 2. Firestore Update
+                if (fb.db && fb.doc && fb.setDoc) {
+                    try {
+                        fb.setDoc(fb.doc(fb.db, 'users', uid), {
+                            latitude: lat,
+                            longitude: lng,
+                            locationCaptured: true,
+                            locationUpdatedAt: new Date().toISOString()
+                        }, { merge: true }).catch(() => {});
+
+                        fb.setDoc(fb.doc(fb.db, 'donors', uid), {
+                            latitude: lat,
+                            longitude: lng,
+                            locationCaptured: true,
+                            locationUpdatedAt: new Date().toISOString()
+                        }, { merge: true }).catch(() => {});
+                    } catch (e) {
+                        console.warn("Firestore location update notice:", e);
+                    }
+                }
+            }
+
+            // Update in local array
+            const myName = (stored.name || stored.fullName || 'You (Donor)') + (stored.name && !stored.name.includes('(You)') ? ' (You)' : '');
+            const existing = allDonors.find(d => d.uid === uid || d.isCurrentUser);
+
+            if (existing) {
+                existing.latitude = lat;
+                existing.longitude = lng;
+                existing.locationCaptured = true;
+                existing.isLiveRegistered = true;
+            } else {
+                allDonors.unshift({
+                    uid: uid,
+                    name: myName,
+                    bloodGroup: stored.bloodGroup || 'O+',
+                    latitude: lat,
+                    longitude: lng,
+                    city: stored.city || 'My Device GPS',
+                    district: stored.district || stored.city || 'Colombo',
+                    phone: stored.phone || '',
+                    email: stored.email || '',
+                    locationCaptured: true,
+                    isLiveRegistered: true,
+                    isCurrentUser: true,
+                    available: true
+                });
+            }
+
+            userCoords = { lat, lng };
+            renderUserLocationMarker(userCoords);
+            calculateDistancesAndSort();
+            applyFilters();
+            window.flyToDonor(uid);
+            showToast(`✓ Broadcasted! Live GPS updated in Firebase (±${Math.round(acc)}m)`);
+        },
+        err => {
+            btn.classList.remove('locating');
+            btn.innerHTML = '<i class="fas fa-satellite-dish"></i> Update My Live Location';
+            showToast('Permission denied. Please allow location access to share your live GPS.');
+        },
+        { enableHighAccuracy: true, timeout: 12000 }
+    );
+}
+
+// ── 16. FILTERING LOGIC ───────────────────────────────────────────
+function applyFilters() {
+    const bg = document.getElementById('sel-bg').value;
+    const dist = document.getElementById('sel-dist').value;
+    const radiusVal = document.getElementById('sel-radius').value;
+    const radiusKm = radiusVal ? parseFloat(radiusVal) : null;
+    const q = document.getElementById('inp-search').value.trim().toLowerCase();
+    const gpsOnly = document.getElementById('chk-gps-only').checked;
+
+    document.querySelectorAll('.bgp').forEach(p => p.classList.toggle('on', p.dataset.bg === bg));
+
+    filteredDonors = allDonors.filter(d => {
+        if (bg && d.bloodGroup !== bg) return false;
+        if (dist && (d.district || d.city || '') !== dist) return false;
+        if (gpsOnly && !d.locationCaptured) return false;
+        if (radiusKm && userCoords && (d._distance === undefined || d._distance > radiusKm)) return false;
+        if (q) {
+            const haystack = `${d.name || ''} ${d.city || ''} ${d.district || ''}`.toLowerCase();
+            if (!haystack.includes(q)) return false;
+        }
+        return true;
+    });
+
+    // Sort by distance if available, else by name
+    if (userCoords) {
+        filteredDonors.sort((a, b) => (a._distance || 9999) - (b._distance || 9999));
+    }
+
+    renderMarkers(filteredDonors);
+    renderSidebar(filteredDonors);
+    updateRadiusZone(radiusKm);
+}
+
+function resetFilters() {
+    document.getElementById('sel-bg').value = '';
+    document.getElementById('sel-dist').value = '';
+    document.getElementById('sel-radius').value = '';
+    document.getElementById('inp-search').value = '';
+    document.getElementById('chk-gps-only').checked = false;
+    document.querySelectorAll('.bgp').forEach(p => p.classList.remove('on'));
+
+    filteredDonors = [...allDonors];
+    if (userCoords) {
+        filteredDonors.sort((a, b) => (a._distance || 9999) - (b._distance || 9999));
+    }
+    renderMarkers(filteredDonors);
+    renderSidebar(filteredDonors);
+    updateRadiusZone(null);
+    fitAll();
+}
+
+// ── 17. SATELLITE TOGGLE ──────────────────────────────────────────
+function toggleSatellite() {
+    isSatellite = !isSatellite;
+    const btn = document.getElementById('btn-satellite');
+
+    if (isGoogleMapsActive && gmap) {
+        gmap.setMapTypeId(isSatellite ? 'hybrid' : 'roadmap');
+        btn.classList.toggle('active', isSatellite);
+    } else if (leafletMap) {
+        showToast('Satellite view is optimized for Google Maps mode.');
+    }
+}
+
+// ── 18. POPULATE DISTRICT DROPDOWN ────────────────────────────────
+function populateDistricts() {
+    const sel = document.getElementById('sel-dist');
+    SRI_LANKA_DISTRICTS.sort().forEach(d => {
+        const o = document.createElement('option');
+        o.value = d;
+        o.textContent = d;
+        sel.appendChild(o);
+    });
+}
+
+// ── 19. TOAST NOTIFICATIONS ───────────────────────────────────────
+function showToast(msg, dur = 4000) {
+    const el = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+// ── 20. THEME SWITCHER ───────────────────────────────────────────
+function setupThemeToggle() {
+    const btn = document.getElementById('theme-btn');
+    const icon = document.getElementById('theme-icon');
+    const updateIcon = () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        if (isGoogleMapsActive && gmap) gmap.setOptions({ styles: getGoogleMapStyles() });
+    };
+    updateIcon();
+    btn.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('lifelink_theme', next);
+        updateIcon();
+    });
+}
+
+// ── 21. EVENT WIRING ──────────────────────────────────────────────
+function wireEvents() {
+    document.getElementById('sel-bg').addEventListener('change', applyFilters);
+    document.getElementById('sel-dist').addEventListener('change', applyFilters);
+    document.getElementById('sel-radius').addEventListener('change', () => {
+        if (!userCoords) requestUserLocation(false);
+        else applyFilters();
+    });
+    document.getElementById('inp-search').addEventListener('input', applyFilters);
+    document.getElementById('chk-gps-only').addEventListener('change', applyFilters);
+    document.getElementById('btn-reset').addEventListener('click', resetFilters);
+
+    // Blood Pills
+    document.querySelectorAll('.bgp').forEach(pill => {
+        pill.addEventListener('click', () => {
+            const bg = pill.dataset.bg;
+            const sel = document.getElementById('sel-bg');
+            if (pill.classList.contains('on')) {
+                pill.classList.remove('on');
+                sel.value = '';
+            } else {
+                document.querySelectorAll('.bgp').forEach(p => p.classList.remove('on'));
+                pill.classList.add('on');
+                sel.value = bg;
+            }
+            applyFilters();
+        });
+    });
+
+    // Map Buttons
+    document.getElementById('btn-near-me').addEventListener('click', () => requestUserLocation(true));
+    document.getElementById('btn-locate').addEventListener('click', () => requestUserLocation(true));
+    document.getElementById('btn-fit').addEventListener('click', fitAll);
+    document.getElementById('btn-satellite').addEventListener('click', toggleSatellite);
+    document.getElementById('btn-broadcast-live-loc').addEventListener('click', broadcastLiveLocation);
+
+    const toggleProviderBtn = document.getElementById('btn-toggle-provider');
+    if (toggleProviderBtn) {
+        toggleProviderBtn.addEventListener('click', toggleMapProvider);
+    }
+}
+
+// ── 22. DYNAMIC GOOGLE MAPS API LOADER ────────────────────────────
+function loadGoogleMapsScript() {
+    const key = (typeof window.GOOGLE_MAPS_API_KEY !== 'undefined' ? window.GOOGLE_MAPS_API_KEY : '') || '';
+
+    if (!key || key.includes('YOUR_GOOGLE_MAPS_API_KEY')) {
+        console.warn("Google Maps API key missing in maps-config.js. Activating Leaflet fallback.");
+        activateLeafletFallback();
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=initGoogleMap&libraries=geometry,places`;
+    script.async = true;
+    script.onerror = () => {
+        console.warn("Failed to load Google Maps script. Activating Leaflet fallback.");
+        activateLeafletFallback();
+    };
+    document.head.appendChild(script);
+
+    // Timeout safety fallback: If Google Maps doesn't initialize within 4 seconds, switch seamlessly to Leaflet
+    setTimeout(() => {
+        if (!isGoogleMapsActive || !googleTilesLoaded) {
+            activateLeafletFallback();
+        }
+    }, 4000);
+}
+
+// ── 23. BOOTSTRAP ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    setupThemeToggle();
+    populateDistricts();
+    wireEvents();
+    loadDonors(); // Immediate data hydration (<50ms)! No more infinite spinner!
+    loadGoogleMapsScript();
+
+    // Attach listeners for when Firebase is ready
+    window.addEventListener('lifelink:firebase-ready', (e) => {
+        bindFirebaseDonors(e.detail || window.LifeLinkFirebase);
+    });
+    window.addEventListener('lifelink:firebase-synced', () => {
+        if (window.LifeLinkFirebase) bindFirebaseDonors(window.LifeLinkFirebase);
+    });
+
+    // Listen to localStorage changes in other tabs (e.g. user registered as donor in signup tab)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'lifelink_registered_donors' || e.key === 'lifelink_session') {
+            loadDonors();
+        }
+    });
+});
+</script>
+</body>
+</html>

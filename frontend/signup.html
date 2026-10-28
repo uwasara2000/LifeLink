@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up & Register | LifeLink Blood Donation Network</title>
+    <meta name="description" content="Register as a voluntary blood donor, recipient, or partner hospital on LifeLink to help save lives across Sri Lanka.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Immediate Theme Application to prevent flash -->
+    <script src="js/theme.js"></script>
+    <style>
+        :root {
+            --primary-color: #d32f2f;
+            --primary-hover: #b71c1c;
+            --secondary-color: #fce4e4;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
+            --success: #2e7d32;
+            --warning: #ed6c02;
+            --danger: #d32f2f;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #ff5252;
+            --primary-hover: #ff1744;
+            --secondary-color: #2c1a1d;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-color: #333333;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: none;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* Navbar - Unified Style */
+        .navbar {
+            position: sticky;
+            top: 10px;
+            z-index: 999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg, #ffffff);
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+            background: transparent;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .logo span {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color, #333333);
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-color);
+            background: transparent;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-color, #333333);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color, #333333);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover, #b71c1c);
+        }
+
+        /* Signup Layout */
+        .auth-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 10px 40px;
+        }
+
+        .signup-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 680px;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .signup-card {
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+        }
+
+        .signup-header {
+            background: linear-gradient(135deg, rgba(211, 47, 47, 0.08), rgba(211, 47, 47, 0.02));
+            padding: 28px 24px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .signup-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 6px;
+        }
+
+        .signup-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Role Cards Grid */
+        .account-type-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 20px 24px 10px;
+        }
+
+        .account-type-card {
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: var(--bg-color);
+        }
+
+        .account-type-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .account-type-card.active {
+            border-color: var(--primary-color);
+            background-color: var(--secondary-color);
+        }
+
+        .account-type-card i {
+            font-size: 20px;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .account-type-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .account-type-card span {
+            font-size: 10px;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Form Body */
+        .signup-body {
+            padding: 20px 24px 28px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 6px;
+        }
+
+        .form-label span.req {
+            color: var(--primary-color);
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            color: var(--text-muted);
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 11px 14px 11px 40px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.15);
+            background-color: var(--card-bg);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            font-size: 14px;
+        }
+
+        /* Blood Group Picker */
+        .blood-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .blood-pill {
+            padding: 8px;
+            text-align: center;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .blood-pill:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .blood-pill.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);
+        }
+
+        /* Password Strength Meter */
+        .strength-meter {
+            height: 4px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .strength-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Terms & Checkbox */
+        .terms-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-color);
+            margin: 16px 0 20px;
+            cursor: pointer;
+        }
+
+        .terms-checkbox input {
+            accent-color: var(--primary-color);
+            width: 16px;
+            height: 16px;
+            margin-top: 2px;
+        }
+
+        .terms-checkbox a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 13px;
+            font-size: 15px;
+            border-radius: 8px;
+        }
+
+        .auth-footer-text {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 18px;
+        }
+
+        .auth-footer-text a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            padding: 12px 18px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid var(--primary-color);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.toast-success {
+            border-left-color: var(--success);
+        }
+
+        .toast.toast-error {
+            border-left-color: var(--danger);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Footer structure styling */
+        .footer {
+            grid-column: 1 / -1;
+            background: #4a0505;
+            color: #f5f5f5;
+            border-radius: 12px;
+            padding: 40px 30px 20px 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 1.5fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer-brand .logo {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .footer-brand p {
+            font-size: 11px;
+            color: #ccc;
+        }
+
+        .footer-column h4 {
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            color: #ff9999;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 8px;
+        }
+
+        .footer-column ul li a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .footer-column ul li a:hover {
+            color: white;
+            padding-left: 3px;
+        }
+
+        .contact-info p {
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ddd;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .social-links a {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            background: var(--primary-color, #d32f2f);
+        }
+
+        .footer-bottom {
+            grid-column: 1 / -1;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+            margin-top: 15px;
+            font-size: 11px;
+            color: #bbb;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .account-type-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+<script src="js/cities.js"></script>
+<script src="js/navbar.js?v=3.1"></script>
+<script src="js/firebase-universal-auth.js"></script>
+<script type="module" src="js/firebase-config.js?v=3.1"></script>
+<script type="module" src="js/firebase-auth.js?v=3.1"></script>
+<script type="module" src="js/auth-state.js?v=3.1"></script>
+</head>
+<body>
+
+    <div class="app-container">
+
+<!-- Main Registration Form -->
+        <div class="auth-wrapper">
+            <div class="signup-card">
+                
+                <div class="signup-header">
+                    <h1>Create Your LifeLink Account</h1>
+                    <p>Join Sri Lanka's largest voluntary blood donor and emergency support community</p>
+                    <div style="display: flex; justify-content: center; margin-top: 8px;">
+                        <span id="firebaseStatusIndicator" style="font-size: 11px; padding: 4px 12px; border-radius: 999px; background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Checking Firebase Service...
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Account Type Selector -->
+                <div class="account-type-grid">
+                    <div class="account-type-card active" onclick="setAccountType('donor', this)">
+                        <i class="fa-solid fa-hand-holding-droplet"></i>
+                        <h4>Blood Donor</h4>
+                        <span>Donate & save lives</span>
+                    </div>
+                    <div class="account-type-card" onclick="setAccountType('recipient', this)">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                        <h4>Blood Recipient</h4>
+                        <span>Find blood for patient</span>
+                    </div>
+                    <div class="account-type-card" onclick="setAccountType('hospital', this)">
+                        <i class="fa-solid fa-hospital"></i>
+                        <h4>Hospital / Bank</h4>
+                        <span>Medical facility partner</span>
+                    </div>
+                </div>
+
+                <!-- Form Area -->
+                <div class="signup-body">
+                    <form id="signupForm" onsubmit="handleSignup(event)">
+                        
+                        <!-- Common Basic Fields -->
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label" for="fullName">Full Name <span class="req">*</span></label>
+                                <div class="input-group">
+                                    <i class="fa-solid fa-user input-icon"></i>
+                                    <input type="text" id="fullName" class="form-input" placeholder="e.g. Kasun Chamara" required autocomplete="name">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="email">Email Address <span class="req">*</span></label>
+                                <div class="input-group">
+                                    <i class="fa-solid fa-envelope input-icon"></i>
+                                    <input type="email" id="email" class="form-input" placeholder="e.g. kasun@example.com" required autocomplete="email">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label" for="phone">Phone / WhatsApp <span class="req">*</span></label>
+                                <div class="input-group">
+                                    <i class="fa-solid fa-phone input-icon"></i>
+                                    <input type="tel" id="phone" class="form-input" placeholder="e.g. +94 77 123 4567" required autocomplete="tel">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="city">City / District <span class="req">*</span></label>
+                                <div class="input-group">
+                                    <i class="fa-solid fa-location-dot input-icon"></i>
+                                    <select id="city" class="form-select" required>
+                                        <option value="" disabled selected>Select District</option>
+                                        <option value="Ampara">Ampara</option>
+                                        <option value="Anuradhapura">Anuradhapura</option>
+                                        <option value="Badulla">Badulla</option>
+                                        <option value="Batticaloa">Batticaloa</option>
+                                        <option value="Colombo">Colombo</option>
+                                        <option value="Galle">Galle</option>
+                                        <option value="Gampaha">Gampaha</option>
+                                        <option value="Hambantota">Hambantota</option>
+                                        <option value="Jaffna">Jaffna</option>
+                                        <option value="Kalutara">Kalutara</option>
+                                        <option value="Kandy">Kandy</option>
+                                        <option value="Kegalle">Kegalle</option>
+                                        <option value="Kilinochchi">Kilinochchi</option>
+                                        <option value="Kurunegala">Kurunegala</option>
+                                        <option value="Mannar">Mannar</option>
+                                        <option value="Matale">Matale</option>
+                                        <option value="Matara">Matara</option>
+                                        <option value="Monaragala">Monaragala</option>
+                                        <option value="Mullaitivu">Mullaitivu</option>
+                                        <option value="Nuwara Eliya">Nuwara Eliya</option>
+                                        <option value="Polonnaruwa">Polonnaruwa</option>
+                                        <option value="Puttalam">Puttalam</option>
+                                        <option value="Ratnapura">Ratnapura</option>
+                                        <option value="Trincomalee">Trincomalee</option>
+                                        <option value="Vavuniya">Vavuniya</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Section for Donor -->
+                        <div id="donorSection">
+                            <div class="form-group">
+                                <label class="form-label">Blood Group <span class="req">*</span></label>
+                                <div class="blood-grid">
+                                    <div class="blood-pill selected" onclick="selectBloodGroup('O+', this)">O+</div>
+                                    <div class="blood-pill" onclick="selectBloodGroup('O-', this)">O-</div>
+                                    <div class="blood-pill" onclick="selectBloodGroup('A+', this)">A+</div>
+                                    <div class="blood-pill" onclick="selectBloodGroup('A-', this)">A-</div>
+                                    <div class="blood-pill" onclick="selectBloodGroup('B+', this)">B+</div>
+                                    <div class="blood-pill" onclick="selectBloodGroup('B-', this)">B-</div>
+                                    <div class="blood-pill" onclick="selectBloodGroup('AB+', this)">AB+</div>
+                                    <div class="blood-pill" onclick="selectBloodGroup('AB-', this)">AB-</div>
+                                </div>
+                                <input type="hidden" id="selectedBloodGroup" value="O+">
+                            </div>
+
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="age">Age (Years) <span class="req">*</span></label>
+                                    <div class="input-group">
+                                        <i class="fa-solid fa-cake-candles input-icon"></i>
+                                        <input type="number" id="age" class="form-input" min="18" max="65" placeholder="18 - 65" value="24">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="lastDonation">Last Donated Date</label>
+                                    <div class="input-group">
+                                        <i class="fa-solid fa-calendar-days input-icon"></i>
+                                        <input type="date" id="lastDonation" class="form-input">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- GPS Location Capture -->
+                            <div class="form-group" id="locationGroup">
+                                <label class="form-label"><i class="fa-solid fa-map-pin" style="color:var(--primary-color)"></i> Your Location <span style="font-weight:400;color:var(--text-muted);font-size:11px">(helps donors near you find you on the map)</span></label>
+                                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                                    <button type="button" id="shareLocationBtn" onclick="captureGPSLocation()" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit">
+                                        <i class="fa-solid fa-crosshairs" id="locBtnIcon"></i>
+                                        <span id="locBtnText">Share My Location</span>
+                                    </button>
+                                    <span id="locationStatus" style="font-size:12px;color:var(--text-muted)">Location not captured yet</span>
+                                </div>
+                                <input type="hidden" id="donorLat" value="">
+                                <input type="hidden" id="donorLng" value="">
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Section for Hospital -->
+                        <div id="hospitalSection" style="display: none;">
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="hospitalRegNo">Hospital Reg. License No. <span class="req">*</span></label>
+                                    <div class="input-group">
+                                        <i class="fa-solid fa-id-card input-icon"></i>
+                                        <input type="text" id="hospitalRegNo" class="form-input" placeholder="e.g. MOH/PHSRC/2026/894">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="facilityType">Facility Category <span class="req">*</span></label>
+                                    <div class="input-group">
+                                        <i class="fa-solid fa-building-ngo input-icon"></i>
+                                        <select id="facilityType" class="form-select">
+                                            <option value="Government National Hospital">Government Teaching / Base Hospital</option>
+                                            <option value="Private Blood Bank">Private Accredited Hospital</option>
+                                            <option value="Regional Blood Center">National Blood Transfusion Center</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Password Fields with Live Strength Meter -->
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label" for="password">Create Password <span class="req">*</span></label>
+                                <div class="input-group">
+                                    <i class="fa-solid fa-lock input-icon"></i>
+                                    <input type="password" id="password" class="form-input" placeholder="Min 8 characters" required oninput="checkPasswordStrength(this.value)">
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="strength-meter">
+                                    <div class="strength-bar" id="strengthBar"></div>
+                                </div>
+                                <div class="strength-text">
+                                    <span id="strengthText">Strength: Too short</span>
+                                    <span id="strengthAdvice">8+ chars recommended</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="confirmPassword">Confirm Password <span class="req">*</span></label>
+                                <div class="input-group">
+                                    <i class="fa-solid fa-shield-check input-icon"></i>
+                                    <input type="password" id="confirmPassword" class="form-input" placeholder="Repeat password" required oninput="checkPasswordMatch()">
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirmPassword', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="matchMessage" style="font-size: 11px; margin-top: 4px; display: none;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Emergency Consent & Terms -->
+                        <label class="terms-checkbox">
+                            <input type="checkbox" id="termsCheck" required>
+                            <span>I agree to LifeLink's <a href="about.html">Terms of Service</a> & <a href="about.html">Privacy Policy</a>, and consent to receiving emergency SMS blood alerts when urgent supplies are needed in my district.</span>
+                        </label>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-register">
+                            <i class="fa-solid fa-user-plus"></i> Complete Registration
+                        </button>
+
+                    </form>
+
+                    <p class="auth-footer-text">
+                        Already have an account? <a href="login.html">Sign In here</a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Toast Notifications Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Unified Footer -->
+        <footer class="footer">
+            <div class="footer-brand">
+                <a href="index.html" class="logo" style="color: white; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 12px;">
+                    <i class="fa-solid fa-droplet" style="color: white;"></i> LifeLink
+                </a>
+                <p style="font-size: 13px; color: #ddd; margin-bottom: 12px;">Save a life, Be a hero.</p>
+                <p style="font-size: 11px; color: #aaa; margin-top: 15px;">&copy; 2026 LifeLink. All rights reserved.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="Donor.html">Find Donor</a></li>
+                    <li><a href="request-blood.html">Request Blood</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="hospitals.html">Hospitals</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="login.html">Sign In</a></li>
+                    <li><a href="signup.html">Register</a></li>
+                    <li><a href="about.html">Privacy & Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="contact-info">
+                    <p><i class="fa-solid fa-phone"></i> +94 11 123 4567</p>
+                    <p><i class="fa-solid fa-envelope"></i> info@lifelink.lk</p>
+                    <p><i class="fa-solid fa-location-dot"></i> 123, Health Street, Colombo, Sri Lanka</p>
+                </div>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>Designed accurately mirroring standard health application dashboard portals.</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Registration Interactive JS -->
+    <script>
+        let currentAccountType = 'donor';
+
+        function setAccountType(type, element) {
+            currentAccountType = type;
+            document.querySelectorAll('.account-type-card').forEach(c => c.classList.remove('active'));
+            if (element) element.classList.add('active');
+
+            const donorSection = document.getElementById('donorSection');
+            const hospitalSection = document.getElementById('hospitalSection');
+
+            if (type === 'donor') {
+                donorSection.style.display = 'block';
+                hospitalSection.style.display = 'none';
+            } else if (type === 'hospital') {
+                donorSection.style.display = 'none';
+                hospitalSection.style.display = 'block';
+            } else {
+                // recipient
+                donorSection.style.display = 'none';
+                hospitalSection.style.display = 'none';
+            }
+        }
+
+        function selectBloodGroup(group, el) {
+            document.querySelectorAll('.blood-pill').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('selectedBloodGroup').value = group;
+        }
+
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function checkPasswordStrength(pass) {
+            const bar = document.getElementById('strengthBar');
+            const text = document.getElementById('strengthText');
+            const advice = document.getElementById('strengthAdvice');
+
+            let score = 0;
+            if (pass.length >= 6) score++;
+            if (pass.length >= 8) score++;
+            if (/[0-9]/.test(pass)) score++;
+            if (/[A-Z]/.test(pass)) score++;
+            if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+            if (pass.length === 0) {
+                bar.style.width = '0%';
+                text.innerText = 'Strength: Too short';
+                text.style.color = 'var(--text-muted)';
+                advice.innerText = '8+ chars recommended';
+            } else if (score <= 2) {
+                bar.style.width = '30%';
+                bar.style.backgroundColor = '#d32f2f';
+                text.innerText = 'Strength: Weak';
+                text.style.color = '#d32f2f';
+                advice.innerText = 'Add numbers & symbols';
+            } else if (score <= 4) {
+                bar.style.width = '70%';
+                bar.style.backgroundColor = '#ed6c02';
+                text.innerText = 'Strength: Moderate';
+                text.style.color = '#ed6c02';
+                advice.innerText = 'Good password';
+            } else {
+                bar.style.width = '100%';
+                bar.style.backgroundColor = '#2e7d32';
+                text.innerText = 'Strength: Excellent';
+                text.style.color = '#2e7d32';
+                advice.innerText = 'Strong & secure!';
+            }
+            checkPasswordMatch();
+        }
+
+        function checkPasswordMatch() {
+            const pass = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const msg = document.getElementById('matchMessage');
+
+            if (!confirm) {
+                msg.style.display = 'none';
+                return;
+            }
+
+            msg.style.display = 'block';
+            if (pass === confirm) {
+                msg.innerText = '✓ Passwords match';
+                msg.style.color = 'var(--success)';
+            } else {
+                msg.innerText = '✗ Passwords do not match';
+                msg.style.color = 'var(--danger)';
+            }
+        }
+
+        // ── GPS Location Capture ──────────────────────────
+        let capturedLat = null, capturedLng = null;
+
+        function captureGPSLocation() {
+            const btn = document.getElementById('shareLocationBtn');
+            const icon = document.getElementById('locBtnIcon');
+            const text = document.getElementById('locBtnText');
+            const status = document.getElementById('locationStatus');
+
+            if (!navigator.geolocation) {
+                status.textContent = 'Geolocation not supported by your browser.';
+                status.style.color = 'var(--danger)';
+                return;
+            }
+
+            icon.className = 'fa-solid fa-circle-notch fa-spin';
+            text.textContent = 'Getting location...';
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    capturedLat = pos.coords.latitude;
+                    capturedLng = pos.coords.longitude;
+                    document.getElementById('donorLat').value = capturedLat;
+                    document.getElementById('donorLng').value = capturedLng;
+
+                    icon.className = 'fa-solid fa-circle-check';
+                    text.textContent = 'Location Captured!';
+                    btn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
+                    btn.disabled = false;
+                    status.innerHTML = `<i class="fa-solid fa-location-dot" style="color:#16a34a"></i> Lat: ${capturedLat.toFixed(5)}, Lng: ${capturedLng.toFixed(5)}`;
+                    status.style.color = '#16a34a';
+                    showToast('Location captured successfully!', 'success');
+                },
+                (err) => {
+                    icon.className = 'fa-solid fa-crosshairs';
+                    text.textContent = 'Share My Location';
+                    btn.disabled = false;
+                    status.textContent = 'Location access denied – your city will be used instead.';
+                    status.style.color = 'var(--danger)';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        // ── Helper to wait for Firebase Auth service ─────────────────────
+        async function getLifeLinkAuthService() {
+            if (window.LifeLinkAuth && typeof window.LifeLinkAuth.registerUser === 'function') {
+                return window.LifeLinkAuth;
+            }
+            // Poll for up to 8 seconds
+            for (let i = 0; i < 40; i++) {
+                await new Promise(r => setTimeout(r, 200));
+                if (window.LifeLinkAuth && typeof window.LifeLinkAuth.registerUser === 'function') {
+                    return window.LifeLinkAuth;
+                }
+            }
+            return null;
+        }
+
+        function initFirebaseStatusMonitor() {
+            const badge = document.getElementById('firebaseStatusIndicator');
+            if (badge) {
+                badge.style.background = 'rgba(16, 185, 129, 0.15)';
+                badge.style.color = 'var(--success)';
+                badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                badge.innerHTML = '<i class="fa-solid fa-cloud-check"></i> Firebase Connected (Live)';
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFirebaseStatusMonitor);
+        } else {
+            initFirebaseStatusMonitor();
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const city = document.getElementById('city').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match. Please review.', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Connecting to Firebase...';
+
+            const bloodGroup = currentAccountType === 'donor'
+                ? (document.getElementById('selectedBloodGroup')?.value || 'O+')
+                : null;
+
+            // Build location payload (real GPS if captured, otherwise fallback to town coordinates)
+            let lat = capturedLat;
+            let lng = capturedLng;
+            let hasLocation = lat !== null && lng !== null;
+
+            if (!hasLocation && city) {
+                const CITY_COORDS_LOOKUP = {
+                    "Colombo": [6.9271, 79.8612], "Gampaha": [7.0917, 79.9990], "Kalutara": [6.5853, 79.9607],
+                    "Kandy": [7.2906, 80.6337], "Matale": [7.4685, 80.6234], "Nuwara Eliya": [6.9497, 80.7891],
+                    "Galle": [6.0535, 80.2210], "Matara": [5.9485, 80.5353], "Hambantota": [6.1241, 81.1185],
+                    "Jaffna": [9.6615, 80.0255], "Kilinochchi": [9.3983, 80.3997], "Mannar": [8.9801, 79.9046],
+                    "Vavuniya": [8.7514, 80.4997], "Mullaitivu": [9.2679, 80.8121], "Batticaloa": [7.7172, 81.7001],
+                    "Ampara": [7.2939, 81.6741], "Trincomalee": [8.5874, 81.2152], "Kurunegala": [7.4875, 80.3647],
+                    "Puttalam": [8.0362, 79.8282], "Anuradhapura": [8.3114, 80.4037], "Polonnaruwa": [7.9403, 81.0188],
+                    "Badulla": [6.9934, 81.0550], "Monaragala": [6.8726, 81.3513], "Ratnapura": [6.6828, 80.4000],
+                    "Kegalle": [7.2528, 80.3464], "Negombo": [7.2088, 79.8358], "Dehiwala": [6.8511, 79.8653],
+                    "Mount Lavinia": [6.8344, 79.8667], "Moratuwa": [6.7730, 79.8816], "Nugegoda": [6.8649, 79.8997]
+                };
+                if (CITY_COORDS_LOOKUP[city]) {
+                    lat = CITY_COORDS_LOOKUP[city][0];
+                    lng = CITY_COORDS_LOOKUP[city][1];
+                    hasLocation = true;
+                }
+            }
+
+            try {
+                // 2. Ensure Firebase Auth service is available
+                const authService = await getLifeLinkAuthService();
+                if (!authService) {
+                    showToast('Firebase Authentication module is still connecting. Please check your internet connection or refresh.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Complete Registration';
+                    return;
+                }
+
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Registering in Firebase...';
+
+                // 3. Register user directly into Firebase Auth & Cloud Firestore
+                const fbResult = await authService.registerUser({
+                    fullName,
+                    email,
+                    password,
+                    phone,
+                    city,
+                    role: currentAccountType,
+                    bloodGroup,
+                    latitude: hasLocation ? lat : null,
+                    longitude: hasLocation ? lng : null,
+                    locationCaptured: hasLocation,
+                    locationUpdatedAt: hasLocation ? new Date().toISOString() : null
+                });
+
+                if (!fbResult || !fbResult.success) {
+                    showToast(fbResult?.error || 'Registration failed in Firebase. Please check details.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Complete Registration';
+                    return;
+                }
+
+                const registeredUser = fbResult.user;
+
+                if (typeof window.updateLifeLinkNavbar === 'function') {
+                    window.updateLifeLinkNavbar(registeredUser);
+                }
+
+                showToast(`✓ Account registered in Firebase! Welcome ${fullName}.`, 'success');
+                submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Registered in Firebase! Redirecting...';
+
+                setTimeout(() => {
+                    if (currentAccountType === 'donor') {
+                        window.location.href = 'Donor.html';
+                    } else if (currentAccountType === 'hospital') {
+                        window.location.href = 'hospitals.html';
+                    } else {
+                        window.location.href = 'request-blood.html';
+                    }
+                }, 1200);
+            } catch (err) {
+                console.error("Signup handler caught error:", err);
+                showToast(`Registration error: ${err.message || 'Check network connection'}`, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Complete Registration';
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let icon = 'fa-info-circle';
+            if (type === 'success') icon = 'fa-circle-check';
+            if (type === 'error') icon = 'fa-triangle-exclamation';
+
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,2907 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink - Find Blood Donors | Save Lives</title>
+    <meta name="description" content="Search and connect with verified, available blood donors in your area instantly on LifeLink.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/theme.js"></script>
+    <script src="js/cities.js"></script>
+    <script src="js/maps-config.js"></script>
+    <script type="module" src="js/firebase-config.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #cc1111;
+            --primary-hover: #aa0e0e;
+            --primary-red: #cc1111;
+            --primary-dark-red: #aa0e0e;
+            --dark-bg: #121212;
+            --light-bg: #f8f9fa;
+            --bg-light: #f3f4f6;
+            --white: #ffffff;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-dark: #1f2937;
+            --text-gray: #4b5563;
+            --text-light: #6b7280;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --green: #10b981;
+            --badge-green-bg: #ecfdf5;
+            --badge-green-text: #047857;
+            --badge-gray-bg: #f3f4f6;
+            --badge-gray-text: #4b5563;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s ease;
+            --modal-bg: rgba(18, 18, 18, 0.65);
+        }
+
+        /* Dark Mode variables simulation matching index.html */
+        [data-theme="dark"] {
+            --light-bg: #1a1a1a;
+            --bg-light: #2a2a2a;
+            --white: #242424;
+            --card-bg: #242424;
+            --text-main: #f5f5f5;
+            --text-dark: #f5f5f5;
+            --text-gray: #cbd5e1;
+            --text-light: #b0b0b0;
+            --text-muted: #b0b0b0;
+            --border-color: #383838;
+            --badge-green-bg: rgba(16, 185, 129, 0.15);
+            --badge-green-text: #34d399;
+            --badge-gray-bg: #383838;
+            --badge-gray-text: #cbd5e1;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --modal-bg: rgba(0, 0, 0, 0.75);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+
+        /* Layout Structure - Exactly matching index.html */
+        .app-container {
+            max-width: none;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navbar Styling - Exactly matching index.html */
+        .navbar {
+            position: sticky;
+            top: 10px;
+            z-index: 999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg, #ffffff);
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .logo span {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .nav-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+            background: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-color);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Main Content Section */
+        .main-container {
+            width: 100%;
+        }
+
+        /* Hero Panel */
+        .hero-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .hero-badge {
+            color: var(--primary-color);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hero-title {
+            font-size: 42px;
+            line-height: 1.2;
+            margin-bottom: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .hero-title span {
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .hero-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 25px;
+            max-width: 480px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .registered-users {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatars {
+            display: flex;
+        }
+
+        .user-avatars img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--white);
+            margin-right: -10px;
+            object-fit: cover;
+        }
+
+        .user-count-text h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .user-count-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Conceptual Graphic simulation */
+        .hero-graphic {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .graphic-circle {
+            width: 280px;
+            height: 280px;
+            border: 2px dashed #ffcccc;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: rotate 40s linear infinite;
+        }
+
+        [data-theme="dark"] .graphic-circle {
+            border-color: #552222;
+        }
+
+        @keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .center-drop {
+            width: 90px;
+            height: 90px;
+            background: var(--primary-color);
+            border-radius: 0 50% 50% 50%;
+            transform: rotate(45deg);
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(204, 17, 17, 0.3);
+        }
+
+        .center-drop i {
+            transform: rotate(-45deg);
+            color: white;
+            font-size: 28px;
+        }
+
+        .graphic-node {
+            position: absolute;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: var(--shadow);
+            color: var(--text-main);
+        }
+
+        .graphic-node i {
+            color: var(--primary-color);
+            font-size: 14px;
+        }
+
+        .node-top {
+            top: -15px;
+            left: calc(50% - 35px);
+        }
+
+        .node-bottom {
+            bottom: -15px;
+            left: calc(50% - 35px);
+        }
+
+        .node-left {
+            left: -30px;
+            top: calc(50% - 25px);
+        }
+
+        .node-right {
+            right: -30px;
+            top: calc(50% - 25px);
+        }
+
+        /* Search Bar Component */
+        .search-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) auto auto;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .search-field label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.4rem;
+        }
+
+        .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 12px;
+            color: var(--primary-color);
+            font-size: 0.95rem;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .input-with-icon select,
+        .input-with-icon input {
+            width: 100%;
+            padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            outline: none;
+            appearance: none;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .input-with-icon select:focus,
+        .input-with-icon input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(204, 17, 17, 0.15);
+        }
+
+        .input-with-icon::after {
+            content: '\f107';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            color: var(--text-light);
+            pointer-events: none;
+            font-size: 0.85rem;
+        }
+
+        .search-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            height: 44px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .search-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Quick Blood Group Selectors */
+        .quick-blood-select {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .quick-blood-select span {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        .blood-pill {
+            padding: 6px 14px;
+            min-width: 42px;
+            height: 38px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .blood-pill.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 8px rgba(204, 17, 17, 0.25);
+        }
+
+        .blood-pill:hover:not(.active) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Emergency Banner */
+        .emergency-banner {
+            background: linear-gradient(135deg, #cc1111 0%, #770a0a 100%);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            gap: 20px;
+        }
+
+        .emergency-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .emergency-icon {
+            font-size: 2.2rem;
+            background: rgba(255, 255, 255, 0.2);
+            width: 58px;
+            height: 58px;
+            min-width: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .emergency-text h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .emergency-text p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .emergency-btn {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+
+        .emergency-btn:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            background: #fff5f5;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        [data-theme="dark"] .stat-icon {
+            background: rgba(204, 17, 17, 0.15);
+        }
+
+        .stat-info h4 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .stat-info p {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* Main Content Layout (Filters + Donors List + Map) */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr 380px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        /* Filters Column */
+        .filters-sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .filter-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            margin-bottom: 0.6rem;
+        }
+
+        .filter-checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-item input {
+            accent-color: var(--primary-color);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .range-slider-container {
+            padding: 0 2px;
+        }
+
+        .range-slider-container input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .range-value {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .reset-filters-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: background 0.2s;
+            margin-top: 1rem;
+        }
+
+        .reset-filters-btn:hover {
+            background: rgba(204, 17, 17, 0.08);
+        }
+
+        /* Donors List Column */
+        .donors-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .donors-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            margin-bottom: 0.25rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .sort-dropdown {
+            padding: 0.4rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* Donor Card */
+        .donor-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: var(--transition);
+        }
+
+        .donor-card:hover {
+            box-shadow: var(--shadow);
+            border-color: rgba(204, 17, 17, 0.25);
+        }
+
+        .donor-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 12px;
+        }
+
+        .donor-profile {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .donor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+        }
+
+        .donor-info h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .verified-badge {
+            color: #3b82f6;
+            font-size: 0.85rem;
+        }
+
+        .donor-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 0.4rem;
+        }
+
+        .donor-location,
+        .donor-last-donation,
+        .donor-eligibility {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .donor-location i,
+        .donor-last-donation i,
+        .donor-eligibility i {
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            width: 14px;
+            text-align: center;
+        }
+
+        .blood-group-badge {
+            min-width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(204, 17, 17, 0.2);
+            position: relative;
+            line-height: 1;
+        }
+
+        .blood-group-badge.unavailable {
+            background: #9ca3af;
+            box-shadow: none;
+        }
+
+        .availability-status {
+            font-size: 0.65rem;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 1px 4px;
+            border-radius: 4px;
+            margin-top: 1px;
+            text-transform: uppercase;
+        }
+
+        .donor-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .donor-btn {
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .btn-view-profile {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .btn-view-profile:hover {
+            background: var(--bg-light);
+            color: var(--primary-color);
+        }
+
+        .btn-contact {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--primary-color);
+        }
+
+        .btn-contact:hover {
+            background: #fff5f5;
+        }
+
+        [data-theme="dark"] .btn-contact:hover {
+            background: rgba(204, 17, 17, 0.15);
+        }
+
+        .btn-request-blood {
+            background: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            color: white;
+        }
+
+        .btn-request-blood:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-request-blood.disabled {
+            background: var(--border-color);
+            border-color: var(--border-color);
+            color: var(--text-light);
+            pointer-events: none;
+        }
+
+        /* Empty State */
+        .empty-state {
+            background: var(--card-bg);
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        .empty-state h4 {
+            font-size: 1.15rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Map Section Column */
+        .map-sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            position: sticky;
+            top: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .map-header-title {
+            padding: 1rem 1.25rem;
+            font-weight: 700;
+            font-size: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .map-header-title span.badge-live {
+            font-size: 0.75rem;
+            background: var(--badge-green-bg);
+            color: var(--badge-green-text);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .map-container {
+            height: 520px;
+            background: #e5e3df;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Simulated Map Markers */
+        .map-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 5;
+            border: 2px solid white;
+        }
+
+        .map-marker:hover, .map-marker.active {
+            transform: translate(-50%, -50%) scale(1.15);
+            background: var(--primary-hover);
+            z-index: 10;
+        }
+
+        .map-popup-card {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            padding: 0.75rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 240px;
+            border: 1px solid var(--border-color);
+            z-index: 15;
+            transition: var(--transition);
+        }
+
+        .map-popup-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+        }
+
+        .map-popup-info {
+            flex: 1;
+        }
+
+        .map-popup-info h5 {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .map-popup-info .status-tag {
+            font-size: 0.7rem;
+            color: var(--badge-green-text);
+            background: var(--badge-green-bg);
+            padding: 1px 4px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .map-popup-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.25rem;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .map-popup-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .page-btn {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .page-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .page-btn:hover:not(.active) {
+            background: var(--bg-light);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-bg);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            position: relative;
+            animation: modalFadeIn 0.2s ease-out;
+            color: var(--text-main);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-close-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: var(--bg-light);
+        }
+
+        /* QR Donor Card */
+        .qr-card-preview {
+            background: linear-gradient(135deg, #ffffff 0%, #fff0f0 100%);
+            border: 1px solid #ffcccc;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            color: #1f2937;
+        }
+
+        [data-theme="dark"] .qr-card-preview {
+            background: linear-gradient(135deg, #242424 0%, #3a1515 100%);
+            border-color: #662222;
+            color: #f5f5f5;
+        }
+
+        .qr-card-info h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .qr-card-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .qr-code-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            background: white;
+            padding: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 0.85rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-dark);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* Toast Component */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.toast-success {
+            background: #047857;
+        }
+
+        .toast.toast-error {
+            background: #b91c1c;
+        }
+
+        /* Footer structure styling - Exactly matching index.html */
+        .footer {
+            background: #4a0505;
+            color: #f5f5f5;
+            border-radius: 12px;
+            padding: 40px 30px 20px 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 1.5fr;
+            gap: 30px;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer-brand .logo {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .footer-brand p {
+            font-size: 11px;
+            color: #ccc;
+        }
+
+        .footer-column h4 {
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            color: #ff9999;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 8px;
+        }
+
+        .footer-column ul li a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 12px;
+            transition: var(--transition);
+        }
+
+        .footer-column ul li a:hover {
+            color: white;
+            padding-left: 3px;
+        }
+
+        .contact-info p {
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ddd;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .social-links a {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            background: var(--primary-color);
+        }
+
+        .footer-bottom {
+            grid-column: 1 / -1;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+            margin-top: 15px;
+            font-size: 11px;
+            color: #bbb;
+            text-align: left;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .content-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .search-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-card {
+                grid-template-columns: 1fr;
+            }
+
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .donor-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+<script src="js/navbar.js"></script>
+<script type="module" src="js/firebase-auth.js"></script>
+<script type="module" src="js/auth-state.js"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+<div class="main-container">
+
+            <!-- Hero Section -->
+            <section class="hero-card">
+                <div>
+                    <div class="hero-badge"><i class="fa-solid fa-heart"></i> Together, we save lives</div>
+                    <h1 class="hero-title">Donate Blood, <br><span>Save Lives</span></h1>
+                    <p class="hero-desc">LifeLink connects blood donors, recipients, and hospitals to ensure blood is available when someone needs it most.</p>
+
+                    <div class="hero-buttons">
+                        <a href="#searchSection" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Find Donor</a>
+                        <button class="btn btn-outline" onclick="openRegisterDonorModal()"><i class="fa-regular fa-heart"></i> Become a Donor</button>
+                    </div>
+
+                    <div class="registered-users">
+                        <div class="user-avatars">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&fit=crop&q=80" alt="User 1">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&fit=crop&q=80" alt="User 2">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&fit=crop&q=80" alt="User 3">
+                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&fit=crop&q=80" alt="User 4">
+                        </div>
+                        <div class="user-count-text">
+                            <h4>20,000+</h4>
+                            <p>Registered Donors</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-graphic">
+                    <div class="graphic-circle"></div>
+                    <div class="center-drop"><i class="fa-solid fa-heart-pulse"></i></div>
+                    <div class="graphic-node node-top"><i class="fa-solid fa-hand-holding-heart"></i> Donors</div>
+                    <div class="graphic-node node-bottom"><i class="fa-solid fa-location-dot"></i> Near You</div>
+                    <div class="graphic-node node-left"><i class="fa-solid fa-hospital"></i> Hospitals</div>
+                    <div class="graphic-node node-right"><i class="fa-solid fa-users"></i> Recipients</div>
+                </div>
+            </section>
+
+            <!-- Search Card Component -->
+            <div class="search-card" id="searchSection">
+                <div class="search-grid">
+                    <div class="search-field">
+                        <label for="bloodGroupSelect">Blood Group</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-droplet"></i>
+                            <select id="bloodGroupSelect">
+                                <option value="ALL">Select Blood Group</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="search-field">
+                        <label for="districtSelect">District</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <select id="districtSelect">
+                                <option value="ALL">Select District</option>
+                                <option value="Ampara">Ampara</option>
+                                <option value="Anuradhapura">Anuradhapura</option>
+                                <option value="Badulla">Badulla</option>
+                                <option value="Batticaloa">Batticaloa</option>
+                                <option value="Colombo">Colombo</option>
+                                <option value="Galle">Galle</option>
+                                <option value="Gampaha">Gampaha</option>
+                                <option value="Hambantota">Hambantota</option>
+                                <option value="Jaffna">Jaffna</option>
+                                <option value="Kalutara">Kalutara</option>
+                                <option value="Kandy">Kandy</option>
+                                <option value="Kegalle">Kegalle</option>
+                                <option value="Kilinochchi">Kilinochchi</option>
+                                <option value="Kurunegala">Kurunegala</option>
+                                <option value="Mannar">Mannar</option>
+                                <option value="Matale">Matale</option>
+                                <option value="Matara">Matara</option>
+                                <option value="Monaragala">Monaragala</option>
+                                <option value="Mullaitivu">Mullaitivu</option>
+                                <option value="Nuwara Eliya">Nuwara Eliya</option>
+                                <option value="Polonnaruwa">Polonnaruwa</option>
+                                <option value="Puttalam">Puttalam</option>
+                                <option value="Ratnapura">Ratnapura</option>
+                                <option value="Trincomalee">Trincomalee</option>
+                                <option value="Vavuniya">Vavuniya</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="search-field">
+                        <label for="citySelect">City</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-city"></i>
+                            <select id="citySelect">
+                                <option value="ALL">Select City</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="search-field">
+                        <label for="availabilitySelect">Availability</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <select id="availabilitySelect">
+                                <option value="ALL">All Donors</option>
+                                <option value="AVAILABLE" selected>Available Only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="search-btn" id="searchSubmitBtn">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search Donor
+                    </button>
+                    <a href="find-donors-map.html" class="search-btn" id="viewOnMapBtn" style="background:linear-gradient(135deg,#1d4ed8,#1e40af);text-decoration:none;gap:6px;">
+                        <i class="fa-solid fa-map-location-dot"></i> View on Map
+                    </a>
+                </div>
+
+                <div class="quick-blood-select">
+                    <span>Or select your blood group</span>
+                    <div class="blood-pill active" data-bg="ALL">All</div>
+                    <div class="blood-pill" data-bg="A+">A+</div>
+                    <div class="blood-pill" data-bg="A-">A-</div>
+                    <div class="blood-pill" data-bg="B+">B+</div>
+                    <div class="blood-pill" data-bg="B-">B-</div>
+                    <div class="blood-pill" data-bg="AB+">AB+</div>
+                    <div class="blood-pill" data-bg="AB-">AB-</div>
+                    <div class="blood-pill" data-bg="O+">O+</div>
+                    <div class="blood-pill" data-bg="O-">O-</div>
+                </div>
+            </div>
+
+            <!-- Emergency Banner Component -->
+            <div class="emergency-banner">
+                <div class="emergency-content">
+                    <div class="emergency-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="emergency-text">
+                        <h3>Emergency?</h3>
+                        <p>Need blood urgently? Create an emergency request and notify nearby donors instantly.</p>
+                    </div>
+                </div>
+                <button class="emergency-btn" onclick="openEmergencyModal()">
+                    Create Emergency Request <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Stats Component -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                    <div class="stat-info">
+                        <h4>12,450</h4>
+                        <p>Registered Donors</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-droplet"></i></div>
+                    <div class="stat-info">
+                        <h4>4,580</h4>
+                        <p>Donations Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-hospital"></i></div>
+                    <div class="stat-info">
+                        <h4>150</h4>
+                        <p>Hospitals</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <div class="stat-info">
+                        <h4>25</h4>
+                        <p>Districts</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Layout Container -->
+            <div class="content-layout">
+
+                <!-- Left Column: Filters -->
+                <aside class="filters-sidebar">
+                    <div class="filter-header">
+                        <span><i class="fa-solid fa-sliders"></i> Filters</span>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Availability</label>
+                        <div class="filter-checkbox-list">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="filterAvailableOnly" checked> Available Only
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Distance (<span id="distanceRadiusVal">15 km</span>)</label>
+                        <div class="range-slider-container">
+                            <input type="range" id="distanceRange" min="1" max="50" value="15">
+                            <div class="range-value">
+                                <span>1 km</span>
+                                <span>50 km</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Gender</label>
+                        <div class="filter-checkbox-list">
+                            <label class="checkbox-item"><input type="checkbox" name="genderFilter" value="Male" checked> Male</label>
+                            <label class="checkbox-item"><input type="checkbox" name="genderFilter" value="Female" checked> Female</label>
+                            <label class="checkbox-item"><input type="checkbox" name="genderFilter" value="Other" checked> Other</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Age</label>
+                        <div class="filter-checkbox-list">
+                            <label class="checkbox-item"><input type="checkbox" name="ageFilter" value="18-25" checked> 18 - 25</label>
+                            <label class="checkbox-item"><input type="checkbox" name="ageFilter" value="26-35" checked> 26 - 35</label>
+                            <label class="checkbox-item"><input type="checkbox" name="ageFilter" value="36-45" checked> 36 - 45</label>
+                            <label class="checkbox-item"><input type="checkbox" name="ageFilter" value="46+" checked> 46 +</label>
+                        </div>
+                    </div>
+
+                    <button class="reset-filters-btn" id="resetFiltersBtn">
+                        <i class="fa-solid fa-rotate-right"></i> Reset Filters
+                    </button>
+                </aside>
+
+                <!-- Center Column: Donor List -->
+                <main class="donors-section">
+                    <div class="donors-list-header">
+                        <span id="resultsCount">Showing verified donors</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span>Sort by:</span>
+                            <select class="sort-dropdown" id="sortDropdown">
+                                <option value="distance">Distance (Nearest)</option>
+                                <option value="recent">Last Donation Date</option>
+                                <option value="donations">Donations Completed</option>
+                                <option value="name">Name (A - Z)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Donor Container -->
+                    <div id="donorsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-container" id="paginationContainer">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+                </main>
+
+                <!-- Right Column: Interactive Map Widget -->
+                <div class="map-sidebar">
+                    <div class="map-header-title">
+                        <span>Nearby Donors (Live Map)</span>
+                        <span class="badge-live"><i class="fa-solid fa-circle" style="font-size: 6px;"></i> Live</span>
+                    </div>
+                    <div class="map-container" id="mapContainer" style="position:relative;height:320px;border-radius:12px;overflow:hidden;background:#e2e8f0;">
+                        <!-- Live Interactive Map Canvas -->
+                        <div id="donorSideMapCanvas" style="width:100%;height:100%;"></div>
+
+                        <!-- Active Donor Map Preview Card -->
+                        <div class="map-popup-card" id="mapPopupCard" style="display:none;">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Donor Avatar" class="map-popup-avatar" id="popupAvatar">
+                            <div class="map-popup-info">
+                                <h5>
+                                    <span id="popupName">John Perera</span>
+                                    <span style="color:var(--primary-color); font-weight:700;" id="popupBlood">A+</span>
+                                </h5>
+                                <span class="status-tag" id="popupStatus">
+                                    <i class="fa-solid fa-circle" style="font-size: 6px;"></i> Available (2.4 km)
+                                </span>
+                                <button class="map-popup-btn" id="popupContactBtn" onclick="contactCurrentMapDonor()">Contact</button>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="find-donors-map.html" class="search-btn" style="background:linear-gradient(135deg,#cc1111,#990b0b);text-decoration:none;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;box-shadow:0 4px 14px rgba(204,17,17,0.25);">
+                        <i class="fa-solid fa-map-location-dot"></i> Open Fullscreen Google Map
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- Footer - Exactly matching index.html -->
+            <footer class="footer">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo" style="color: white; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 12px;">
+                        <i class="fa-solid fa-droplet" style="color: white;"></i> LifeLink
+                    </a>
+                    <p style="font-size: 13px; color: #ddd; margin-bottom: 12px;">Save a life, Be a hero.</p>
+                    <p style="font-size: 11px; color: #aaa; margin-top: 15px;">&copy; 2026 LifeLink. All rights reserved.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="Donor.html">Find Donor</a></li>
+                        <li><a href="request-blood.html">Request Blood</a></li>
+                        <li><a href="requests.html">All Requests</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="hospitals.html">Hospitals</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="login.html">Sign In</a></li>
+                        <li><a href="signup.html">Register</a></li>
+                        <li><a href="about.html">Privacy & Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Contact Us</h4>
+                    <div class="contact-info">
+                        <p><i class="fa-solid fa-phone"></i> +94 11 123 4567</p>
+                        <p><i class="fa-solid fa-envelope"></i> info@lifelink.lk</p>
+                        <p><i class="fa-solid fa-location-dot"></i> 123, Health Street, Colombo, Sri Lanka</p>
+                    </div>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>Designed accurately mirroring standard health application dashboard portals.</span>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- 1. View Donor Profile Modal (with Digital QR Code Card) -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-id-card" style="color:var(--primary-color);"></i> Donor Profile</h3>
+                <button class="modal-close-btn" onclick="closeModal('profileModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="profileModalContent">
+                <!-- Injected by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('profileModal')">Close</button>
+                <button class="btn btn-primary" id="profileModalActionBtn">Request Blood</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Contact Donor Modal -->
+    <div class="modal-overlay" id="contactModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-phone" style="color:var(--primary-color);"></i> Contact Donor</h3>
+                <button class="modal-close-btn" onclick="closeModal('contactModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="contactModalContent">
+                <!-- Injected by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('contactModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitDirectMessage()"><i class="fa-solid fa-paper-plane"></i> Send Message</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Emergency Request Modal -->
+    <div class="modal-overlay" id="emergencyModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 style="color: var(--primary-color);"><i class="fa-solid fa-triangle-exclamation"></i> Create Emergency Blood Request</h3>
+                <button class="modal-close-btn" onclick="closeModal('emergencyModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="emergencyForm" onsubmit="handleEmergencySubmit(event)">
+                    <div class="form-group">
+                        <label for="reqPatientName">Patient Name *</label>
+                        <input type="text" id="reqPatientName" class="form-control" placeholder="e.g. Kasun Bandara" required>
+                    </div>
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label for="reqBloodGroup">Blood Group *</label>
+                            <select id="reqBloodGroup" class="form-control" required>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="reqUnits">Units Needed *</label>
+                            <input type="number" id="reqUnits" class="form-control" min="1" max="10" value="2" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reqHospital">Hospital / Blood Bank *</label>
+                        <select id="reqHospital" class="form-control" required>
+                            <option value="National Hospital, Colombo">National Hospital, Colombo</option>
+                            <option value="Teaching Hospital, Kandy">Teaching Hospital, Kandy</option>
+                            <option value="Colombo South Teaching Hospital (Kalubowila)">Colombo South Teaching Hospital (Kalubowila)</option>
+                            <option value="Karapitiya Teaching Hospital, Galle">Karapitiya Teaching Hospital, Galle</option>
+                            <option value="Sri Jayewardenepura General Hospital">Sri Jayewardenepura General Hospital</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reqUrgency">Urgency *</label>
+                        <select id="reqUrgency" class="form-control" required>
+                            <option value="Critical (Within 2 Hours)">Critical (Within 2 Hours)</option>
+                            <option value="Urgent (Within 6 Hours)">Urgent (Within 6 Hours)</option>
+                            <option value="Standard">Standard</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reqContactPhone">Phone Number *</label>
+                        <input type="tel" id="reqContactPhone" class="form-control" placeholder="07X XXX XXXX" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                        <i class="fa-solid fa-bolt"></i> Send Emergency Request
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Register Donor Modal -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-plus" style="color:var(--primary-color);"></i> Register as Donor</h3>
+                <button class="modal-close-btn" onclick="closeModal('registerModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="donorRegisterForm" onsubmit="handleDonorRegisterSubmit(event)">
+                    <div class="form-group">
+                        <label for="regFullName">Full Name *</label>
+                        <input type="text" id="regFullName" class="form-control" placeholder="e.g. Priyantha Kumara" required>
+                    </div>
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label for="regBloodGroup">Blood Group *</label>
+                            <select id="regBloodGroup" class="form-control" required>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="regGender">Gender *</label>
+                            <select id="regGender" class="form-control" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label for="regDistrict">District *</label>
+                            <select id="regDistrict" class="form-control" required>
+                                <option value="Ampara">Ampara</option>
+                                <option value="Anuradhapura">Anuradhapura</option>
+                                <option value="Badulla">Badulla</option>
+                                <option value="Batticaloa">Batticaloa</option>
+                                <option value="Colombo" selected>Colombo</option>
+                                <option value="Galle">Galle</option>
+                                <option value="Gampaha">Gampaha</option>
+                                <option value="Hambantota">Hambantota</option>
+                                <option value="Jaffna">Jaffna</option>
+                                <option value="Kalutara">Kalutara</option>
+                                <option value="Kandy">Kandy</option>
+                                <option value="Kegalle">Kegalle</option>
+                                <option value="Kilinochchi">Kilinochchi</option>
+                                <option value="Kurunegala">Kurunegala</option>
+                                <option value="Mannar">Mannar</option>
+                                <option value="Matale">Matale</option>
+                                <option value="Matara">Matara</option>
+                                <option value="Monaragala">Monaragala</option>
+                                <option value="Mullaitivu">Mullaitivu</option>
+                                <option value="Nuwara Eliya">Nuwara Eliya</option>
+                                <option value="Polonnaruwa">Polonnaruwa</option>
+                                <option value="Puttalam">Puttalam</option>
+                                <option value="Ratnapura">Ratnapura</option>
+                                <option value="Trincomalee">Trincomalee</option>
+                                <option value="Vavuniya">Vavuniya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="regCity">City *</label>
+                            <input type="text" id="regCity" class="form-control" placeholder="e.g. Maharagama" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPhone">Phone Number *</label>
+                        <input type="tel" id="regPhone" class="form-control" placeholder="071 234 5678" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                        <i class="fa-solid fa-heart"></i> Register
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Component -->
+    <div class="toast" id="toastBox">
+        <i class="fa-solid fa-circle-check" id="toastIcon"></i>
+        <span id="toastMsg">Operation successful</span>
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // Comprehensive District to Cities mapping from cities.js
+        const districtCityMap = (typeof SRI_LANKA_DISTRICT_CITIES !== 'undefined') ? SRI_LANKA_DISTRICT_CITIES : {
+            "Colombo": ["Colombo 01", "Colombo 03", "Colombo 07", "Nugegoda", "Maharagama", "Dehiwala", "Mount Lavinia", "Kottawa"],
+            "Gampaha": ["Gampaha", "Negombo", "Kelaniya", "Kadawatha", "Kiribathgoda", "Ja-Ela"],
+            "Kalutara": ["Kalutara", "Panadura", "Horana", "Beruwala", "Matugama"],
+            "Kandy": ["Kandy", "Peradeniya", "Katugastota", "Gampola", "Kundasale"],
+            "Galle": ["Galle", "Karapitiya", "Hikkaduwa", "Ambalangoda"],
+            "Matara": ["Matara", "Mirissa", "Weligama", "Akuressa"],
+            "Kurunegala": ["Kurunegala", "Kuliyapitiya", "Pannala", "Narammala"],
+            "Jaffna": ["Jaffna", "Chavakachcheri", "Nallur", "Point Pedro"]
+        };
+
+        // Realistic Donor Database with accurate Sri Lanka GPS coordinates
+        let donorsDatabase = [
+            {
+                id: "D101",
+                name: "John Perera",
+                bloodGroup: "A+",
+                district: "Colombo",
+                city: "Colombo",
+                latitude: 6.9271,
+                longitude: 79.8612,
+                distance: 2.4,
+                lastDonationMonths: 4,
+                totalDonations: 8,
+                available: true,
+                gender: "Male",
+                age: 28,
+                phone: "+94 77 123 4567",
+                email: "john.perera@email.com",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                verified: true,
+                mapPos: { top: "45%", left: "40%" }
+            },
+            {
+                id: "D102",
+                name: "Nimal Silva",
+                bloodGroup: "O-",
+                district: "Gampaha",
+                city: "Gampaha",
+                latitude: 7.0917,
+                longitude: 79.9990,
+                distance: 4.8,
+                lastDonationMonths: 5,
+                totalDonations: 12,
+                available: true,
+                gender: "Male",
+                age: 34,
+                phone: "+94 71 987 6543",
+                email: "nimal.silva@email.com",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
+                verified: true,
+                mapPos: { top: "30%", left: "65%" }
+            },
+            {
+                id: "D103",
+                name: "Tharushi Fernando",
+                bloodGroup: "B+",
+                district: "Kandy",
+                city: "Kandy",
+                latitude: 7.2906,
+                longitude: 80.6337,
+                distance: 8.6,
+                lastDonationMonths: 3,
+                totalDonations: 5,
+                available: true,
+                gender: "Female",
+                age: 24,
+                phone: "+94 76 555 1234",
+                email: "tharushi.f@email.com",
+                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150",
+                verified: true,
+                mapPos: { top: "60%", left: "25%" }
+            },
+            {
+                id: "D104",
+                name: "Sameera De Silva",
+                bloodGroup: "AB-",
+                district: "Colombo",
+                city: "Mount Lavinia",
+                latitude: 6.8344,
+                longitude: 79.8667,
+                distance: 9.1,
+                lastDonationMonths: 2,
+                totalDonations: 3,
+                available: false,
+                gender: "Male",
+                age: 29,
+                phone: "+94 70 333 9988",
+                email: "sameera.desilva@email.com",
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150",
+                verified: true,
+                mapPos: { top: "75%", left: "55%" }
+            },
+            {
+                id: "D105",
+                name: "Dr. Anoma Wickramasinghe",
+                bloodGroup: "O+",
+                district: "Colombo",
+                city: "Nugegoda",
+                latitude: 6.8649,
+                longitude: 79.8997,
+                distance: 3.2,
+                lastDonationMonths: 6,
+                totalDonations: 15,
+                available: true,
+                gender: "Female",
+                age: 38,
+                phone: "+94 77 444 8822",
+                email: "anoma.w@health.lk",
+                avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150",
+                verified: true,
+                mapPos: { top: "50%", left: "70%" }
+            },
+            {
+                id: "D106",
+                name: "Kavinda Rathnayake",
+                bloodGroup: "A-",
+                district: "Gampaha",
+                city: "Negombo",
+                latitude: 7.2088,
+                longitude: 79.8358,
+                distance: 12.0,
+                lastDonationMonths: 7,
+                totalDonations: 6,
+                available: true,
+                gender: "Male",
+                age: 22,
+                phone: "+94 78 222 1199",
+                email: "kavinda.r@email.com",
+                avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=150",
+                verified: true,
+                mapPos: { top: "20%", left: "35%" }
+            }
+        ];
+
+        let selectedBloodGroup = "ALL";
+        let currentPage = 1;
+        const pageSize = 4;
+        let selectedMapDonor = donorsDatabase[0];
+
+        // ==================== DOM ELEMENTS ====================
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const bloodGroupSelect = document.getElementById('bloodGroupSelect');
+        const districtSelect = document.getElementById('districtSelect');
+        const citySelect = document.getElementById('citySelect');
+        const availabilitySelect = document.getElementById('availabilitySelect');
+        const searchSubmitBtn = document.getElementById('searchSubmitBtn');
+        const bloodPills = document.querySelectorAll('.blood-pill');
+        const donorsContainer = document.getElementById('donorsContainer');
+        const resultsCountEl = document.getElementById('resultsCount');
+        const sortDropdown = document.getElementById('sortDropdown');
+        const distanceRange = document.getElementById('distanceRange');
+        const distanceRadiusVal = document.getElementById('distanceRadiusVal');
+        const filterAvailableOnly = document.getElementById('filterAvailableOnly');
+        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+        const mapMarkersContainer = document.getElementById('mapMarkersContainer');
+
+        // ==================== DISTRICT & CITY HANDLERS ====================
+        function populateCityDropdown(selectedDist) {
+            citySelect.innerHTML = '<option value="ALL">Select City</option>';
+            if (selectedDist !== "ALL" && districtCityMap[selectedDist]) {
+                districtCityMap[selectedDist].forEach(city => {
+                    const opt = document.createElement('option');
+                    opt.value = city;
+                    opt.textContent = city;
+                    citySelect.appendChild(opt);
+                });
+            } else if (typeof SRI_LANKA_ALL_CITIES !== 'undefined') {
+                SRI_LANKA_ALL_CITIES.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.city;
+                    opt.textContent = `${item.city} (${item.district})`;
+                    citySelect.appendChild(opt);
+                });
+            }
+        }
+
+        districtSelect.addEventListener('change', () => {
+            populateCityDropdown(districtSelect.value);
+            applyFilters();
+        });
+
+        // Initialize city dropdown with all cities on page load
+        populateCityDropdown(districtSelect.value);
+
+        citySelect.addEventListener('change', applyFilters);
+        availabilitySelect.addEventListener('change', () => {
+            filterAvailableOnly.checked = (availabilitySelect.value === 'AVAILABLE');
+            applyFilters();
+        });
+
+        // ==================== QUICK BLOOD PILLS ====================
+        bloodPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                bloodPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                selectedBloodGroup = pill.getAttribute('data-bg');
+                bloodGroupSelect.value = selectedBloodGroup;
+                applyFilters();
+            });
+        });
+
+        bloodGroupSelect.addEventListener('change', () => {
+            selectedBloodGroup = bloodGroupSelect.value;
+            bloodPills.forEach(pill => {
+                pill.classList.toggle('active', pill.getAttribute('data-bg') === selectedBloodGroup);
+            });
+            applyFilters();
+        });
+
+        // ==================== SIDEBAR FILTER EVENTS ====================
+        distanceRange.addEventListener('input', () => {
+            distanceRadiusVal.textContent = `${distanceRange.value} km`;
+            applyFilters();
+        });
+
+        filterAvailableOnly.addEventListener('change', () => {
+            availabilitySelect.value = filterAvailableOnly.checked ? 'AVAILABLE' : 'ALL';
+            applyFilters();
+        });
+
+        document.querySelectorAll('input[name="genderFilter"], input[name="ageFilter"]').forEach(inp => {
+            inp.addEventListener('change', applyFilters);
+        });
+
+        sortDropdown.addEventListener('change', applyFilters);
+        searchSubmitBtn.addEventListener('click', applyFilters);
+
+        resetFiltersBtn.addEventListener('click', () => {
+            bloodGroupSelect.value = 'ALL';
+            selectedBloodGroup = 'ALL';
+            bloodPills.forEach(p => p.classList.toggle('active', p.getAttribute('data-bg') === 'ALL'));
+            districtSelect.value = 'ALL';
+            citySelect.innerHTML = '<option value="ALL">Select City</option>';
+            availabilitySelect.value = 'ALL';
+            filterAvailableOnly.checked = false;
+            distanceRange.value = 50;
+            distanceRadiusVal.textContent = '50 km';
+            document.querySelectorAll('input[name="genderFilter"]').forEach(i => i.checked = true);
+            document.querySelectorAll('input[name="ageFilter"]').forEach(i => i.checked = true);
+            sortDropdown.value = 'distance';
+            applyFilters();
+            showToast('Filters reset', 'info');
+        });
+
+        // ==================== FILTERING & RENDERING ENGINE ====================
+        function getFilteredDonors() {
+            const selectedDist = districtSelect.value;
+            const selectedCity = citySelect.value;
+            const maxDistance = parseFloat(distanceRange.value);
+            const requireAvailable = filterAvailableOnly.checked;
+
+            const selectedGenders = Array.from(document.querySelectorAll('input[name="genderFilter"]:checked')).map(i => i.value);
+            const selectedAgeRanges = Array.from(document.querySelectorAll('input[name="ageFilter"]:checked')).map(i => i.value);
+
+            return donorsDatabase.filter(donor => {
+                if (selectedBloodGroup !== "ALL" && donor.bloodGroup !== selectedBloodGroup) return false;
+                if (selectedDist !== "ALL" && donor.district !== selectedDist) return false;
+                if (selectedCity !== "ALL" && !donor.city.includes(selectedCity)) return false;
+                if (requireAvailable && !donor.available) return false;
+                if (donor.distance > maxDistance) return false;
+                if (!selectedGenders.includes(donor.gender)) return false;
+                
+                const inAge = selectedAgeRanges.some(range => {
+                    if (range === '18-25') return donor.age >= 18 && donor.age <= 25;
+                    if (range === '26-35') return donor.age >= 26 && donor.age <= 35;
+                    if (range === '36-45') return donor.age >= 36 && donor.age <= 45;
+                    if (range === '46+') return donor.age >= 46;
+                    return false;
+                });
+                if (!inAge) return false;
+
+                return true;
+            });
+        }
+
+        function sortDonors(donors) {
+            const sortVal = sortDropdown.value;
+            return [...donors].sort((a, b) => {
+                if (sortVal === 'distance') return a.distance - b.distance;
+                if (sortVal === 'donations') return b.totalDonations - a.totalDonations;
+                if (sortVal === 'recent') return a.lastDonationMonths - b.lastDonationMonths;
+                if (sortVal === 'name') return a.name.localeCompare(b.name);
+                return 0;
+            });
+        }
+
+        function applyFilters() {
+            currentPage = 1;
+            renderDonors();
+        }
+
+        function renderDonors() {
+            const filtered = sortDonors(getFilteredDonors());
+            const totalCount = filtered.length;
+            resultsCountEl.textContent = `Showing ${totalCount} donor${totalCount === 1 ? '' : 's'}`;
+
+            if (totalCount === 0) {
+                donorsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-user-slash"></i>
+                        <h4>No donors found</h4>
+                        <p>Try widening your search filters or selecting another blood group.</p>
+                    </div>
+                `;
+                document.getElementById('paginationContainer').innerHTML = '';
+                renderMapMarkers([]);
+                return;
+            }
+
+            const totalPages = Math.ceil(totalCount / pageSize);
+            const startIdx = (currentPage - 1) * pageSize;
+            const currentDonors = filtered.slice(startIdx, startIdx + pageSize);
+
+            donorsContainer.innerHTML = currentDonors.map(donor => `
+                <div class="donor-card ${donor.available ? '' : 'unavailable'}">
+                    <div class="donor-card-top">
+                        <div class="donor-profile">
+                            <img src="${donor.avatar}" alt="${donor.name}" class="donor-avatar">
+                            <div class="donor-info">
+                                <h3>${donor.name} ${donor.verified ? '<i class="fa-solid fa-circle-check verified-badge"></i>' : ''}</h3>
+                                <div class="donor-subtitle">Verified Donor</div>
+                                <div class="donor-location"><i class="fa-solid fa-location-dot"></i> ${donor.city}, ${donor.district} • ${donor.distance} km away</div>
+                                <div class="donor-last-donation"><i class="fa-solid fa-calendar-days"></i> Last Donation: ${donor.lastDonationMonths} Months Ago</div>
+                            </div>
+                        </div>
+                        <div class="blood-group-badge ${donor.available ? '' : 'unavailable'}">
+                            ${donor.bloodGroup}
+                            <span class="availability-status">${donor.available ? 'Available' : 'Unavailable'}</span>
+                        </div>
+                    </div>
+                    <div class="donor-actions">
+                        <button class="donor-btn btn-view-profile" onclick="openProfileModal('${donor.id}')">View Profile</button>
+                        <button class="donor-btn btn-contact" onclick="openContactModal('${donor.id}')"><i class="fa-solid fa-phone"></i> Contact</button>
+                        <button class="donor-btn btn-request-blood ${donor.available ? '' : 'disabled'}" onclick="openRequestForDonor('${donor.id}')"><i class="fa-solid fa-droplet"></i> Request Blood</button>
+                    </div>
+                </div>
+            `).join('');
+
+            renderPagination(totalPages);
+            renderMapMarkers(filtered);
+        }
+
+        function renderPagination(totalPages) {
+            const paginationContainer = document.getElementById('paginationContainer');
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button class="page-btn" ${currentPage === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} onclick="changePage(${currentPage - 1})">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <button class="page-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            html += `
+                <button class="page-btn" ${currentPage === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} onclick="changePage(${currentPage + 1})">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            `;
+
+            paginationContainer.innerHTML = html;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderDonors();
+            document.getElementById('donorsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ==================== MAP INTEGRATION LOGIC ====================
+        let sideGmap = null;
+        let sideMarkers = [];
+
+        function initDonorSideMap() {
+            const canvas = document.getElementById('donorSideMapCanvas');
+            if (!canvas || typeof google === 'undefined' || !google.maps) return;
+            
+            sideGmap = new google.maps.Map(canvas, {
+                center: { lat: 6.9271, lng: 79.8612 },
+                zoom: 9,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM }
+            });
+
+            renderMapMarkers(sortDonors(getFilteredDonors()));
+        }
+
+        window.initGoogleMapForDonorPage = function() {
+            initDonorSideMap();
+        };
+
+        function renderMapMarkers(donors) {
+            const popup = document.getElementById('mapPopupCard');
+            if (popup) popup.style.display = 'flex';
+
+            if (sideGmap && typeof google !== 'undefined' && google.maps) {
+                sideMarkers.forEach(m => m.setMap(null));
+                sideMarkers = [];
+
+                const bounds = new google.maps.LatLngBounds();
+
+                donors.slice(0, 15).forEach(donor => {
+                    const lat = donor.latitude || 6.9271;
+                    const lng = donor.longitude || 79.8612;
+                    const pos = { lat, lng };
+                    bounds.extend(pos);
+
+                    const marker = new google.maps.Marker({
+                        position: pos,
+                        map: sideGmap,
+                        title: `${donor.name} (${donor.bloodGroup})`
+                    });
+
+                    marker.addListener('click', () => {
+                        selectMapDonor(donor.id);
+                    });
+
+                    donor._sideMarker = marker;
+                    sideMarkers.push(marker);
+                });
+
+                if (donors.length > 0) {
+                    sideGmap.fitBounds(bounds, 30);
+                    selectMapDonor(donors[0].id);
+                }
+            }
+        }
+
+        function selectMapDonor(donorId) {
+            const donor = donorsDatabase.find(d => d.id === donorId);
+            if (!donor) return;
+            selectedMapDonor = donor;
+
+            document.getElementById('popupAvatar').src = donor.avatar;
+            document.getElementById('popupName').textContent = donor.name;
+            document.getElementById('popupBlood').textContent = donor.bloodGroup;
+            document.getElementById('popupStatus').innerHTML = `
+                <i class="fa-solid fa-circle" style="font-size: 6px;"></i> 
+                ${donor.available ? 'Available' : 'Unavailable'} (${donor.distance} km)
+            `;
+
+            if (sideGmap && donor.latitude && donor.longitude) {
+                sideGmap.panTo({ lat: donor.latitude, lng: donor.longitude });
+                sideGmap.setZoom(12);
+            }
+        }
+
+        function contactCurrentMapDonor() {
+            if (selectedMapDonor) {
+                openContactModal(selectedMapDonor.id);
+            }
+        }
+
+        function loadSideGoogleMaps() {
+            const key = window.GOOGLE_MAPS_API_KEY || '';
+            if (!key || key.includes('YOUR_GOOGLE_MAPS_API_KEY')) return;
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=initGoogleMapForDonorPage&loading=async`;
+            script.async = true;
+            document.head.appendChild(script);
+        }
+
+        function fetchFirebaseDonors() {
+            // A. Immediate local hydration for registered users
+            try {
+                const storedSession = JSON.parse(localStorage.getItem('lifelink_session') || '{}');
+                const regList = JSON.parse(localStorage.getItem('lifelink_registered_donors') || '[]');
+                const localReal = [];
+
+                if (storedSession && (storedSession.role === 'donor' || storedSession.bloodGroup)) {
+                    localReal.push({
+                        id: storedSession.uid || 'current_user',
+                        name: (storedSession.name || storedSession.fullName || 'Registered Donor') + ' (You)',
+                        bloodGroup: storedSession.bloodGroup || 'O+',
+                        district: storedSession.district || storedSession.city || 'Colombo',
+                        city: storedSession.city || storedSession.district || 'Colombo',
+                        latitude: storedSession.latitude || 6.9271,
+                        longitude: storedSession.longitude || 79.8612,
+                        distance: 1.5,
+                        lastDonationMonths: 1,
+                        totalDonations: 1,
+                        available: true,
+                        gender: storedSession.gender || 'Male',
+                        age: storedSession.age || 26,
+                        phone: storedSession.phone || '',
+                        email: storedSession.email || '',
+                        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+                        verified: true,
+                        donorCardId: storedSession.donorCardId || 'LL-Verified'
+                    });
+                }
+
+                if (Array.isArray(regList)) {
+                    regList.forEach(r => {
+                        if (!localReal.some(d => d.id === r.uid || (r.email && d.email === r.email))) {
+                            localReal.push({
+                                id: r.uid || 'reg_' + Math.random().toString(36).substr(2, 6),
+                                name: r.name || r.fullName || 'Registered Donor',
+                                bloodGroup: r.bloodGroup || 'O+',
+                                district: r.district || r.city || 'Colombo',
+                                city: r.city || r.district || 'Colombo',
+                                latitude: r.latitude || 6.9271,
+                                longitude: r.longitude || 79.8612,
+                                distance: 2.0,
+                                lastDonationMonths: 1,
+                                totalDonations: 1,
+                                available: true,
+                                gender: r.gender || 'Male',
+                                age: r.age || 26,
+                                phone: r.phone || '',
+                                email: r.email || '',
+                                avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+                                verified: true,
+                                donorCardId: r.donorCardId || 'LL-Verified'
+                            });
+                        }
+                    });
+                }
+
+                if (localReal.length > 0) {
+                    const localIds = new Set(localReal.map(d => d.id));
+                    const preserved = donorsDatabase.filter(d => !localIds.has(d.id) && !localReal.some(r => (r.email && r.email === d.email) || (r.phone && r.phone === d.phone)));
+                    donorsDatabase = [...localReal, ...preserved];
+                    applyFilters();
+                }
+            } catch (e) {
+                console.warn("Local donor hydration notice:", e);
+            }
+
+            const fb = window.LifeLinkFirebase;
+            if (!fb) return;
+
+            function mergeDonorsList(incomingList) {
+                if (!Array.isArray(incomingList) || !incomingList.length) return;
+                const incomingIds = new Set(incomingList.map(d => d.id));
+                const preserved = donorsDatabase.filter(d => !incomingIds.has(d.id) && !incomingList.some(r => (r.email && r.email === d.email) || (r.phone && r.phone === d.phone)));
+                donorsDatabase = [...incomingList, ...preserved];
+                applyFilters();
+            }
+
+            // 1. Live Realtime Database synchronization on /donors
+            if (fb.rtdb && fb.ref && fb.onValue) {
+                try {
+                    const { rtdb, ref, onValue } = fb;
+                    onValue(ref(rtdb, 'donors'), (snapshot) => {
+                        const val = snapshot.val();
+                        if (val && typeof val === 'object') {
+                            const rtdbDonors = Object.keys(val).map(k => {
+                                const d = val[k];
+                                return {
+                                    id: d.id || k,
+                                    name: d.name || 'Anonymous Donor',
+                                    bloodGroup: d.bloodGroup || 'O+',
+                                    district: d.district || d.city || 'Colombo',
+                                    city: d.city || d.district || 'Colombo',
+                                    latitude: d.latitude || 6.9271,
+                                    longitude: d.longitude || 79.8612,
+                                    distance: d.distance || 2.5,
+                                    lastDonationMonths: d.lastDonationMonths || 1,
+                                    totalDonations: d.totalDonations || 1,
+                                    available: d.available !== false,
+                                    gender: d.gender || 'Male',
+                                    age: d.age || 26,
+                                    phone: d.phone || '',
+                                    email: d.email || '',
+                                    avatar: d.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+                                    verified: true,
+                                    donorCardId: d.donorCardId || 'LL-Verified'
+                                };
+                            });
+
+                            if (rtdbDonors.length > 0) {
+                                mergeDonorsList(rtdbDonors);
+                            }
+                        }
+                    }, (err) => console.warn("LifeLink RTDB donors notice:", err.message));
+                } catch (e) {
+                    console.warn("Could not bind RTDB donors listener:", e);
+                }
+            }
+
+            // 2. Cloud Firestore real-time onSnapshot synchronization
+            if (fb.db && fb.collection) {
+                const { db, collection, onSnapshot, getDocs, query, where } = fb;
+                try {
+                    onSnapshot(collection(db, 'users'), (snap) => {
+                        const realDonors = [];
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (data && (data.role === 'donor' || data.bloodGroup)) {
+                                realDonors.push({
+                                    id: doc.id,
+                                    name: data.name || 'Anonymous Donor',
+                                    bloodGroup: data.bloodGroup || 'O+',
+                                    district: data.district || data.city || 'Colombo',
+                                    city: data.city || data.district || 'Colombo',
+                                    latitude: data.latitude || 6.9271,
+                                    longitude: data.longitude || 79.8612,
+                                    distance: 2.0,
+                                    lastDonationMonths: 1,
+                                    totalDonations: 1,
+                                    available: true,
+                                    gender: data.gender || 'Male',
+                                    age: 26,
+                                    phone: data.phone || '',
+                                    email: data.email || '',
+                                    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+                                    verified: true,
+                                    donorCardId: data.donorCardId || 'LL-Verified'
+                                });
+                            }
+                        });
+                        if (realDonors.length > 0) {
+                            mergeDonorsList(realDonors);
+                        }
+                    }, () => {
+                        // Fallback one-time getDocs
+                        if (getDocs && query && where) {
+                            getDocs(query(collection(db, 'users'), where('role', '==', 'donor'))).then(snap => {
+                                const realDonors = [];
+                                snap.forEach(doc => {
+                                    const data = doc.data();
+                                    if (data && data.bloodGroup) {
+                                        realDonors.push({
+                                            id: doc.id,
+                                            name: data.name || 'Anonymous Donor',
+                                            bloodGroup: data.bloodGroup,
+                                            district: data.district || data.city || 'Colombo',
+                                            city: data.city || data.district || 'Colombo',
+                                            latitude: data.latitude || 6.9271,
+                                            longitude: data.longitude || 79.8612,
+                                            distance: 2.0,
+                                            lastDonationMonths: 1,
+                                            totalDonations: 1,
+                                            available: true,
+                                            gender: data.gender || 'Male',
+                                            age: 26,
+                                            phone: data.phone || '',
+                                            email: data.email || '',
+                                            avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+                                            verified: true
+                                        });
+                                    }
+                                });
+                                if (realDonors.length > 0) mergeDonorsList(realDonors);
+                            }).catch(() => {});
+                        }
+                    });
+                } catch (e) {
+                    console.warn("Firestore listener notice:", e);
+                }
+            }
+        }
+
+        // ==================== MODAL CONTROLLERS ====================
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        };
+
+        function openProfileModal(donorId) {
+            const donor = donorsDatabase.find(d => d.id === donorId);
+            if (!donor) return;
+
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=LIFELINK-DONOR-${donor.id}-${donor.bloodGroup}`;
+
+            document.getElementById('profileModalContent').innerHTML = `
+                <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 16px;">
+                    <img src="${donor.avatar}" alt="${donor.name}" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark);">${donor.name}</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">${donor.district} • ${donor.city}</p>
+                        <span style="font-size: 0.75rem; background: var(--badge-green-bg); color: var(--badge-green-text); padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                            ${donor.verified ? 'Verified Donor' : 'Community Donor'}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="qr-card-preview">
+                    <div class="qr-card-info">
+                        <h4>LifeLink QR Donor Card</h4>
+                        <p>ID: <strong>${donor.id}</strong></p>
+                        <p>Blood Group: <strong style="color:var(--primary-color); font-size:1.1rem;">${donor.bloodGroup}</strong></p>
+                    </div>
+                    <img src="${qrUrl}" alt="Donor QR Code" class="qr-code-img">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div style="background: var(--bg-light); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Total Donations</span>
+                        <strong style="font-size: 1rem; color: var(--text-dark);">${donor.totalDonations} Times</strong>
+                    </div>
+                    <div style="background: var(--bg-light); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Eligibility Status</span>
+                        <strong style="font-size: 0.9rem; color: ${donor.lastDonationMonths >= 3 ? 'var(--badge-green-text)' : 'var(--text-muted)'};">
+                            ${donor.lastDonationMonths >= 3 ? 'Eligible Now' : `Eligible in ${3 - donor.lastDonationMonths} Mo.`}
+                        </strong>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('profileModalActionBtn').onclick = () => {
+                closeModal('profileModal');
+                openRequestForDonor(donor.id);
+            };
+
+            openModal('profileModal');
+        }
+
+        function openContactModal(donorId) {
+            const donor = donorsDatabase.find(d => d.id === donorId);
+            if (!donor) return;
+
+            document.getElementById('contactModalContent').innerHTML = `
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <img src="${donor.avatar}" alt="${donor.name}" style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; margin-bottom: 6px;">
+                    <h4 style="font-size: 1.05rem; color: var(--text-dark);">${donor.name}</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">${donor.bloodGroup} Blood Donor (${donor.city})</p>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <a href="tel:${donor.phone}" class="btn btn-outline" style="flex: 1; text-decoration: none;">
+                        <i class="fa-solid fa-phone"></i> Call Phone
+                    </a>
+                    <a href="https://wa.me/${donor.phone.replace(/[^0-9]/g, '')}" target="_blank" class="btn btn-outline" style="flex: 1; text-decoration: none; color: #25D366; border-color: #25D366;">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                    </a>
+                </div>
+
+                <div class="form-group">
+                    <label>Send Direct Message</label>
+                    <textarea class="form-control" id="directMessageText" rows="3" placeholder="Hello ${donor.name}, we urgently require ${donor.bloodGroup} blood at..."></textarea>
+                </div>
+            `;
+
+            openModal('contactModal');
+        }
+
+        function submitDirectMessage() {
+            const msg = document.getElementById('directMessageText');
+            if (msg && msg.value.trim() === '') {
+                showToast('Please type your message first.', 'error');
+                return;
+            }
+            closeModal('contactModal');
+            showToast('Emergency message sent to donor!', 'success');
+        }
+
+        function openRequestForDonor(donorId) {
+            const donor = donorsDatabase.find(d => d.id === donorId);
+            if (donor) {
+                document.getElementById('reqBloodGroup').value = donor.bloodGroup;
+            }
+            openEmergencyModal();
+        }
+
+        function openEmergencyModal() {
+            openModal('emergencyModal');
+        }
+
+        function openRegisterDonorModal() {
+            openModal('registerModal');
+        }
+
+        function handleEmergencySubmit(event) {
+            event.preventDefault();
+            const patient = document.getElementById('reqPatientName').value;
+            const blood = document.getElementById('reqBloodGroup').value;
+            const hospital = document.getElementById('reqHospital').value;
+
+            closeModal('emergencyModal');
+            showToast(`🚨 Emergency request broadcasted for ${patient} (${blood}) at ${hospital}!`, 'success');
+            document.getElementById('emergencyForm').reset();
+        }
+
+        function handleDonorRegisterSubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById('regFullName').value;
+            const bloodGroup = document.getElementById('regBloodGroup').value;
+            const district = document.getElementById('regDistrict').value;
+            const city = document.getElementById('regCity').value;
+            const gender = document.getElementById('regGender').value;
+            const phone = document.getElementById('regPhone').value;
+
+            const newDonor = {
+                id: `D${donorsDatabase.length + 101}`,
+                name: name,
+                bloodGroup: bloodGroup,
+                district: district,
+                city: city,
+                distance: 1.5,
+                lastDonationMonths: 6,
+                totalDonations: 0,
+                available: true,
+                gender: gender,
+                age: 26,
+                phone: phone,
+                email: `${name.toLowerCase().replace(/\s+/g, '.')}@email.com`,
+                avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+                verified: true,
+                mapPos: { top: "50%", left: "50%" }
+            };
+
+            donorsDatabase.unshift(newDonor);
+
+            // Sync newly registered donor directly to Realtime Database
+            if (window.LifeLinkFirebase && window.LifeLinkFirebase.rtdb) {
+                try {
+                    const { rtdb, ref, set } = window.LifeLinkFirebase;
+                    set(ref(rtdb, `donors/${newDonor.id}`), {
+                        ...newDonor,
+                        donorCardId: `LL-${Math.floor(1000 + Math.random() * 9000)}`,
+                        registeredAt: Date.now()
+                    }).then(() => console.log("LifeLink: Donor synced to RTDB /donors:", newDonor.id))
+                      .catch(e => console.warn("RTDB donor write notice:", e.message));
+                } catch (_) {}
+            }
+
+            closeModal('registerModal');
+            document.getElementById('donorRegisterForm').reset();
+            applyFilters();
+            showToast(`Welcome ${name}! You are now registered as an active donor.`, 'success');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toastBox');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = message;
+            toast.className = `toast show ${type === 'success' ? 'toast-success' : type === 'error' ? 'toast-error' : ''}`;
+            
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check';
+            } else if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-triangle-exclamation';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-info';
+            }
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderDonors();
+            loadSideGoogleMaps();
+            fetchFirebaseDonors();
+            window.addEventListener('lifelink:firebase-ready', () => fetchFirebaseDonors(), { once: true });
+            window.addEventListener('lifelink:firebase-synced', () => fetchFirebaseDonors());
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "lifelink",
+  "version": "1.0.0",
+  "description": "LifeLink Blood Donation Network",
+  "scripts": {
+    "start": "npm start --prefix backend",
+    "dev": "npm run dev --prefix backend",
+    "login": "npx -y firebase-tools@latest login",
+    "deploy": "npx -y firebase-tools@latest deploy --only hosting"
+  },
+  "dependencies": {
+    "firebase": "^13.0.0"
+  }
+}

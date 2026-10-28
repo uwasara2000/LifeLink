@@ -1,0 +1,383 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink - About Us | Community Blood Donation Network</title>
+    <meta name="description" content="Learn about LifeLink and our mission to save lives through smart blood matching and emergency alerts.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/theme.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #cc1111;
+            --primary-hover: #aa0e0e;
+            --dark-bg: #121212;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --light-bg: #1a1a1a;
+            --white: #242424;
+            --text-main: #f5f5f5;
+            --text-muted: #b0b0b0;
+            --border-color: #383838;
+            --card-bg: #242424;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        .app-container {
+            max-width: none;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navbar - Exactly matching index.html and Donor.html */
+        .navbar {
+            position: sticky;
+            top: 10px;
+            z-index: 999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg, #ffffff);
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .logo span {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .nav-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-color);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 35px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .content-card h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            background: #4a0505;
+            color: #f5f5f5;
+            border-radius: 12px;
+            padding: 40px 30px 20px 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 1.5fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                grid-template-columns: 1fr;
+            }
+            .nav-links {
+                display: none;
+            }
+        }
+
+        .footer-brand .logo {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .footer-brand p {
+            font-size: 11px;
+            color: #ccc;
+        }
+
+        .footer-column h4 {
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            color: #ff9999;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 8px;
+        }
+
+        .footer-column ul li a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 12px;
+            transition: var(--transition);
+        }
+
+        .footer-column ul li a:hover {
+            color: white;
+            padding-left: 3px;
+        }
+
+        .contact-info p {
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ddd;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .social-links a {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            background: var(--primary-color);
+        }
+
+        .footer-bottom {
+            grid-column: 1 / -1;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+            margin-top: 15px;
+            font-size: 11px;
+            color: #bbb;
+            text-align: left;
+        }
+    </style>
+<script src="js/navbar.js"></script>
+<script type="module" src="js/firebase-config.js"></script>
+<script type="module" src="js/firebase-auth.js"></script>
+<script type="module" src="js/auth-state.js"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+<div class="content-card">
+            <h1>About LifeLink</h1>
+            <p style="font-size: 15px; margin-bottom: 20px;">
+                LifeLink is an automated community blood donation platform engineered to bridge the critical gap between blood donors, recipients, hospitals, and blood banks during medical emergencies.
+            </p>
+            <h3 style="margin-bottom: 10px; color: var(--text-main);">Our Core Objectives:</h3>
+            <ul style="padding-left: 20px; margin-bottom: 20px; color: var(--text-muted);">
+                <li>Reduce emergency blood search time from hours to minutes.</li>
+                <li>Provide smart location-based donor proximity matching.</li>
+                <li>Enable instant multi-channel emergency broadcast alerts.</li>
+                <li>Equip donors with digital QR ID cards for rapid hospital verification.</li>
+            </ul>
+        </div>
+
+        <!-- Unified Footer -->
+        <footer class="footer">
+            <div class="footer-brand">
+                <a href="index.html" class="logo" style="color: white; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 12px;">
+                    <i class="fa-solid fa-droplet" style="color: white;"></i> LifeLink
+                </a>
+                <p style="font-size: 13px; color: #ddd; margin-bottom: 12px;">Save a life, Be a hero.</p>
+                <p style="font-size: 11px; color: #aaa; margin-top: 15px;">&copy; 2026 LifeLink. All rights reserved.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="Donor.html">Find Donor</a></li>
+                    <li><a href="request-blood.html">Request Blood</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="hospitals.html">Hospitals</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="login.html">Sign In</a></li>
+                    <li><a href="signup.html">Register</a></li>
+                    <li><a href="about.html">Privacy & Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="contact-info">
+                    <p><i class="fa-solid fa-phone"></i> +94 11 123 4567</p>
+                    <p><i class="fa-solid fa-envelope"></i> info@lifelink.lk</p>
+                    <p><i class="fa-solid fa-location-dot"></i> 123, Health Street, Colombo, Sri Lanka</p>
+                </div>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>Designed accurately mirroring standard health application dashboard portals.</span>
+            </div>
+        </footer>
+
+    </div>
+
+</body>
+</html>

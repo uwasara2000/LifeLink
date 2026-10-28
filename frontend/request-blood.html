@@ -1,0 +1,847 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink - Emergency Blood Request</title>
+    <meta name="description" content="Submit emergency blood requests to notify nearby donors and hospitals immediately on LifeLink.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/theme.js"></script>
+    <script src="js/cities.js"></script>
+    <script src="js/requests-data.js"></script>
+    <script type="module" src="js/firebase-config.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #cc1111;
+            --primary-hover: #aa0e0e;
+            --dark-bg: #121212;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --light-bg: #1a1a1a;
+            --white: #242424;
+            --text-main: #f5f5f5;
+            --text-muted: #b0b0b0;
+            --border-color: #383838;
+            --card-bg: #242424;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        .app-container {
+            max-width: none;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navbar - Exactly matching index.html and Donor.html */
+        .navbar {
+            position: sticky;
+            top: 10px;
+            z-index: 999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg, #ffffff);
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .logo span {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .nav-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-color);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Page Layout */
+        .page-content {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .page-content {
+                grid-template-columns: 1fr;
+            }
+            .nav-links {
+                display: none;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-main);
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(204, 17, 17, 0.12);
+        }
+
+        /* City Autocomplete Dropdown */
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .city-suggestions {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--card-bg, #ffffff);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 9999;
+            display: none;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            animation: fadeInDown 0.15s ease;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .city-suggestions.open {
+            display: block;
+        }
+
+        .city-suggestions li {
+            padding: 9px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+
+        .city-suggestions li:hover,
+        .city-suggestions li.active {
+            background: #fff0f0;
+            color: var(--primary-color);
+        }
+
+        .city-suggestions li .city-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .city-suggestions li .city-badge {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: rgba(204, 17, 17, 0.08);
+            color: var(--primary-color);
+            font-weight: 500;
+            white-space: nowrap;
+            margin-left: auto;
+        }
+
+        .city-suggestions li:hover .city-badge,
+        .city-suggestions li.active .city-badge {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .city-suggestions li em {
+            font-style: normal;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .city-suggestions .no-results {
+            padding: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            cursor: default;
+        }
+
+        [data-theme="dark"] .city-suggestions {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="dark"] .city-suggestions li:hover,
+        [data-theme="dark"] .city-suggestions li.active {
+            background: rgba(204, 17, 17, 0.22);
+            color: #ff7676;
+        }
+
+        [data-theme="dark"] .city-suggestions li .city-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ff9999;
+        }
+
+        .emergency-notice {
+            background: #fff0f0;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #cc1111;
+        }
+
+        [data-theme="dark"] .emergency-notice {
+            background: rgba(204, 17, 17, 0.15);
+            color: #ff8080;
+        }
+
+        .footer {
+            background: #4a0505;
+            color: #f5f5f5;
+            border-radius: 12px;
+            padding: 40px 30px 20px 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 1.5fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer-brand .logo {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .footer-brand p {
+            font-size: 11px;
+            color: #ccc;
+        }
+
+        .footer-column h4 {
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            color: #ff9999;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 8px;
+        }
+
+        .footer-column ul li a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 12px;
+            transition: var(--transition);
+        }
+
+        .footer-column ul li a:hover {
+            color: white;
+            padding-left: 3px;
+        }
+
+        .contact-info p {
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ddd;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .social-links a {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            background: var(--primary-color);
+        }
+
+        .footer-bottom {
+            grid-column: 1 / -1;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+            margin-top: 15px;
+            font-size: 11px;
+            color: #bbb;
+            text-align: left;
+        }
+    </style>
+<script src="js/navbar.js"></script>
+<script type="module" src="js/firebase-auth.js"></script>
+<script type="module" src="js/auth-state.js"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+<div class="page-content">
+            <div class="card">
+                <h2><i class="fa-solid fa-triangle-exclamation" style="color:var(--primary-color);"></i> Submit Emergency Blood Request</h2>
+                
+                <div class="emergency-notice">
+                    <i class="fa-solid fa-circle-info"></i> Your emergency broadcast will be immediately delivered to all verified matching donors and nearby partner hospitals.
+                </div>
+
+                <form id="emergencyBloodForm" onsubmit="handleRequestFormSubmit(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reqPatientName">Patient Full Name *</label>
+                            <input type="text" id="reqPatientName" placeholder="e.g. Kasun Bandara" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reqBloodGroup">Required Blood Group *</label>
+                            <select id="reqBloodGroup" required>
+                                <option value="">Select Blood Group</option>
+                                <option value="A+">A+</option><option value="A-">A-</option>
+                                <option value="B+">B+</option><option value="B-">B-</option>
+                                <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                                <option value="O+">O+</option><option value="O-">O-</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reqUnits">Units of Blood Needed *</label>
+                            <input type="number" id="reqUnits" min="1" max="10" value="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reqUrgency">Urgency Level *</label>
+                            <select id="reqUrgency" required>
+                                <option value="Emergency (Immediate - Within 2 Hours)">Emergency (Immediate - Within 2 Hours)</option>
+                                <option value="Urgent (Within 6 Hours)">Urgent (Within 6 Hours)</option>
+                                <option value="Standard (Within 24 Hours)">Standard (Within 24 Hours)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reqHospital">Hospital / Blood Bank *</label>
+                            <input type="text" id="reqHospital" placeholder="e.g. National Hospital of Sri Lanka" required>
+                        </div>
+                        <div class="form-group autocomplete-wrapper">
+                            <label for="reqCity">City / District *</label>
+                            <input type="text" id="reqCity" placeholder="e.g. Colombo, Kandy, Galle..." autocomplete="off" required>
+                            <ul id="citySuggestions" class="city-suggestions"></ul>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reqContactName">Contact Person Name *</label>
+                            <input type="text" id="reqContactName" placeholder="Relative / Doctor Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reqContactPhone">Contact Mobile Number *</label>
+                            <input type="tel" id="reqContactPhone" placeholder="07X XXX XXXX" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reqMedicalNotes">Medical Details / Reason (Optional)</label>
+                        <textarea id="reqMedicalNotes" rows="3" placeholder="Surgery, accident, Thalassemia transfusion..."></textarea>
+                    </div>
+
+                    <button type="submit" id="submitRequestBtn" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 15px;">
+                        <i class="fa-solid fa-bolt"></i> Broadcast Emergency Alert Now
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0; font-size: 18px;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary-color);"></i> Active Emergency Feeds</h2>
+                    <a href="requests.html" class="btn btn-outline" style="font-size: 12px; padding: 4px 10px;">
+                        View All <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div id="sideEmergencyFeedsList" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Dynamically populated from requests-data.js -->
+                </div>
+                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-color); text-align: center;">
+                    <a href="requests.html" style="color: var(--primary-color); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>Explore all live blood requests in Sri Lanka</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unified Footer -->
+        <footer class="footer">
+            <div class="footer-brand">
+                <a href="index.html" class="logo" style="color: white; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 12px;">
+                    <i class="fa-solid fa-droplet" style="color: white;"></i> LifeLink
+                </a>
+                <p style="font-size: 13px; color: #ddd; margin-bottom: 12px;">Save a life, Be a hero.</p>
+                <p style="font-size: 11px; color: #aaa; margin-top: 15px;">&copy; 2026 LifeLink. All rights reserved.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="Donor.html">Find Donor</a></li>
+                    <li><a href="request-blood.html">Request Blood</a></li>
+                    <li><a href="requests.html">All Requests</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="hospitals.html">Hospitals</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="login.html">Sign In</a></li>
+                    <li><a href="signup.html">Register</a></li>
+                    <li><a href="about.html">Privacy & Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <div class="contact-info">
+                    <p><i class="fa-solid fa-phone"></i> +94 11 123 4567</p>
+                    <p><i class="fa-solid fa-envelope"></i> info@lifelink.lk</p>
+                    <p><i class="fa-solid fa-location-dot"></i> 123, Health Street, Colombo, Sri Lanka</p>
+                </div>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>Designed accurately mirroring standard health application dashboard portals.</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Scripts for Request Submission and Feeds -->
+    <script>
+        // City Autocomplete setup
+        (function initCityAutocomplete() {
+            const input = document.getElementById('reqCity');
+            const list = document.getElementById('citySuggestions');
+            if (!input || !list) return;
+
+            let activeIdx = -1;
+            let currentMatches = [];
+
+            function highlight(text, query) {
+                if (!query) return text;
+                const idx = text.toLowerCase().indexOf(query.toLowerCase());
+                if (idx === -1) return text;
+                return text.slice(0, idx)
+                    + '<em>' + text.slice(idx, idx + query.length) + '</em>'
+                    + text.slice(idx + query.length);
+            }
+
+            function renderList() {
+                const q = input.value.trim();
+                if (typeof searchSriLankanCities === 'function') {
+                    currentMatches = searchSriLankanCities(q);
+                } else if (typeof SRI_LANKA_ALL_CITIES !== 'undefined') {
+                    currentMatches = SRI_LANKA_ALL_CITIES.filter(item => {
+                        if (!q) return true;
+                        return item.city.toLowerCase().includes(q.toLowerCase()) ||
+                               item.district.toLowerCase().includes(q.toLowerCase());
+                    });
+                } else {
+                    currentMatches = [];
+                }
+
+                // Show top 10 matches
+                const displayed = currentMatches.slice(0, 10);
+                list.innerHTML = '';
+                activeIdx = -1;
+
+                if (displayed.length === 0) {
+                    list.innerHTML = '<li class="no-results"><i class="fa-solid fa-circle-info"></i> No cities found</li>';
+                } else {
+                    displayed.forEach((item) => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <span class="city-label">
+                                <i class="fa-solid fa-location-dot" style="font-size:11px;color:var(--primary-color)"></i>
+                                <span>${highlight(item.city, q)}</span>
+                            </span>
+                            <span class="city-badge">${item.district}</span>
+                        `;
+                        li.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            input.value = item.city;
+                            input.dataset.selectedDistrict = item.district;
+                            list.classList.remove('open');
+                        });
+                        list.appendChild(li);
+                    });
+                }
+                list.classList.add('open');
+            }
+
+            input.addEventListener('focus', renderList);
+            input.addEventListener('input', renderList);
+            input.addEventListener('blur', () => {
+                setTimeout(() => list.classList.remove('open'), 200);
+            });
+        })();
+
+        // Populate Active Emergency Feeds on sidebar
+        function renderSidebarEmergencyFeeds() {
+            const container = document.getElementById('sideEmergencyFeedsList');
+            if (!container) return;
+
+            const requests = typeof getStoredBloodRequests === 'function' ? getStoredBloodRequests() : [];
+            const topRequests = requests.slice(0, 3);
+
+            if (topRequests.length === 0) {
+                container.innerHTML = '<p style="font-size: 12px; color: var(--text-muted); padding: 10px;">No active emergency broadcasts at the moment.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            topRequests.forEach(req => {
+                const relTime = typeof formatRelativeTime === 'function' && req.timestamp
+                    ? formatRelativeTime(req.timestamp)
+                    : (req.postedAt || 'Recently');
+
+                const item = document.createElement('div');
+                item.style.padding = '12px';
+                item.style.borderRadius = '8px';
+                item.style.border = '1px solid var(--border-color)';
+                item.style.background = 'var(--light-bg)';
+                item.style.cursor = 'pointer';
+                item.style.transition = 'all 0.2s ease';
+                item.title = 'Click to view in All Requests page';
+                item.onclick = () => {
+                    window.location.href = `requests.html?new=${encodeURIComponent(req.id)}`;
+                };
+
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="color:var(--primary-color); font-size: 15px;">${req.bloodGroup} Needed (${req.urgency || 'Emergency'})</strong>
+                        <span style="font-size: 11px; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> ${relTime}</span>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                        ${req.hospital} • ${req.unitsNeeded} ${req.unitsNeeded === 1 ? 'Unit' : 'Units'} • ${req.city}
+                    </p>
+                `;
+
+                item.onmouseenter = () => {
+                    item.style.borderColor = 'var(--primary-color)';
+                    item.style.transform = 'translateY(-1px)';
+                };
+                item.onmouseleave = () => {
+                    item.style.borderColor = 'var(--border-color)';
+                    item.style.transform = 'none';
+                };
+
+                container.appendChild(item);
+            });
+        }
+
+        // Form Submission Handler
+        window.handleRequestFormSubmit = async function(event) {
+            event.preventDefault();
+
+            const btn = document.getElementById('submitRequestBtn');
+            const patientName = document.getElementById('reqPatientName').value.trim();
+            const bloodGroup = document.getElementById('reqBloodGroup').value;
+            const unitsNeeded = parseInt(document.getElementById('reqUnits').value, 10) || 1;
+            const urgencyLabel = document.getElementById('reqUrgency').value;
+            const hospital = document.getElementById('reqHospital').value.trim();
+            const cityInput = document.getElementById('reqCity');
+            const city = cityInput.value.trim();
+            const contactName = document.getElementById('reqContactName').value.trim();
+            const contactPhone = document.getElementById('reqContactPhone').value.trim();
+            const medicalNotes = document.getElementById('reqMedicalNotes').value.trim();
+
+            let urgencyType = 'Standard';
+            if (urgencyLabel.includes('Emergency')) urgencyType = 'Emergency';
+            else if (urgencyLabel.includes('Urgent')) urgencyType = 'Urgent';
+
+            let district = cityInput.dataset.selectedDistrict || '';
+            if (!district && typeof SRI_LANKA_ALL_CITIES !== 'undefined') {
+                const match = SRI_LANKA_ALL_CITIES.find(c => c.city.toLowerCase() === city.toLowerCase());
+                if (match) district = match.district;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Broadcasting to Cloud Database...';
+
+            try {
+                const payload = {
+                    patientName,
+                    bloodGroup,
+                    unitsNeeded,
+                    urgency: urgencyType,
+                    urgencyLabel,
+                    hospital,
+                    city,
+                    district: district || city,
+                    contactName,
+                    contactPhone,
+                    medicalNotes: medicalNotes || `Emergency broadcast submitted for patient ${patientName} at ${hospital}.`
+                };
+
+                let newReq = null;
+                if (typeof saveBloodRequestAsync === 'function') {
+                    newReq = await saveBloodRequestAsync(payload, 2500);
+                } else if (typeof saveBloodRequest === 'function') {
+                    newReq = saveBloodRequest(payload);
+                }
+
+                const targetId = newReq?.id || '';
+                window.location.href = `requests.html?new=${encodeURIComponent(targetId)}`;
+            } catch (err) {
+                console.error("Submission failed, continuing:", err);
+                window.location.href = 'requests.html';
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSidebarEmergencyFeeds();
+
+            // Auto-update sidebar when Firebase Firestore updates
+            if (typeof subscribeToBloodRequests === 'function') {
+                subscribeToBloodRequests(() => {
+                    renderSidebarEmergencyFeeds();
+                });
+            }
+            window.addEventListener('lifelink:requests-updated', () => {
+                renderSidebarEmergencyFeeds();
+            });
+        });
+    </script>
+</body>
+</html>
