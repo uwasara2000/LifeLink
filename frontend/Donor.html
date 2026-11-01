@@ -2566,9 +2566,6 @@
                 console.warn("Local donor hydration notice:", e);
             }
 
-            const fb = window.LifeLinkFirebase;
-            if (!fb) return;
-
             function mergeDonorsList(incomingList) {
                 if (!Array.isArray(incomingList) || !incomingList.length) return;
                 const incomingIds = new Set(incomingList.map(d => d.id));
@@ -2576,6 +2573,55 @@
                 donorsDatabase = [...incomingList, ...preserved];
                 applyFilters();
             }
+
+            // B. Fetch from Firestore REST API (Works universally on file:/// and http://)
+            (async function fetchCloudDonors() {
+                try {
+                    const apiKey = "AIzaSyDA3lBOZPMVvYs7iZVrwtdtPmv561ghAA0";
+                    const proj = "lifelink-e37cf";
+                    const res = await fetch(`https://firestore.googleapis.com/v1/projects/${proj}/databases/(default)/documents/users?key=${apiKey}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.documents) {
+                            const cloudList = [];
+                            data.documents.forEach(doc => {
+                                const f = doc.fields || {};
+                                const role = f.role?.stringValue;
+                                const blood = f.bloodGroup?.stringValue;
+                                if (role === 'donor' || blood) {
+                                    const id = doc.name.split('/').pop();
+                                    cloudList.push({
+                                        id: id,
+                                        name: f.name?.stringValue || 'Registered Donor',
+                                        bloodGroup: blood || 'O+',
+                                        district: f.district?.stringValue || f.city?.stringValue || 'Colombo',
+                                        city: f.city?.stringValue || f.district?.stringValue || 'Colombo',
+                                        latitude: f.latitude?.doubleValue || f.latitude?.integerValue || 6.9271,
+                                        longitude: f.longitude?.doubleValue || f.longitude?.integerValue || 79.8612,
+                                        distance: 2.0,
+                                        lastDonationMonths: 1,
+                                        totalDonations: 1,
+                                        available: true,
+                                        gender: f.gender?.stringValue || 'Male',
+                                        age: 26,
+                                        phone: f.phone?.stringValue || '',
+                                        email: f.email?.stringValue || '',
+                                        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150",
+                                        verified: true,
+                                        donorCardId: f.donorCardId?.stringValue || 'LL-Verified'
+                                    });
+                                }
+                            });
+                            if (cloudList.length > 0) mergeDonorsList(cloudList);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Firestore REST notice on Donor.html:", e);
+                }
+            })();
+
+            const fb = window.LifeLinkFirebase;
+            if (!fb) return;
 
             // 1. Live Realtime Database synchronization on /donors
             if (fb.rtdb && fb.ref && fb.onValue) {
@@ -2854,7 +2900,25 @@
 
             donorsDatabase.unshift(newDonor);
 
-            // Sync newly registered donor directly to Realtime Database
+            // Save to localStorage registry
+            try {
+                const regList = JSON.parse(localStorage.getItem('lifelink_registered_donors') || '[]');
+                regList.unshift(newDonor);
+                localStorage.setItem('lifelink_registered_donors', JSON.stringify(regList));
+                localStorage.setItem('lifelink_new_donor_broadcast', JSON.stringify({
+                    donor: newDonor,
+                    timestamp: Date.now()
+                }));
+            } catch (_) {}
+
+            // Broadcast across tabs (e.g. to find-donors-map.html)
+            try {
+                const bc = new BroadcastChannel('lifelink_channel');
+                bc.postMessage({ type: 'DONOR_REGISTERED', donor: newDonor });
+                bc.close();
+            } catch (_) {}
+
+            // Sync newly registered donor directly to Realtime Database & Firestore
             if (window.LifeLinkFirebase && window.LifeLinkFirebase.rtdb) {
                 try {
                     const { rtdb, ref, set } = window.LifeLinkFirebase;
@@ -2866,6 +2930,28 @@
                       .catch(e => console.warn("RTDB donor write notice:", e.message));
                 } catch (_) {}
             }
+
+            // Sync to Firestore via REST API
+            try {
+                const apiKey = "AIzaSyDA3lBOZPMVvYs7iZVrwtdtPmv561ghAA0";
+                const proj = "lifelink-e37cf";
+                fetch(`https://firestore.googleapis.com/v1/projects/${proj}/databases/(default)/documents/donors/${newDonor.id}?key=${apiKey}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fields: {
+                            name: { stringValue: newDonor.name },
+                            bloodGroup: { stringValue: newDonor.bloodGroup },
+                            district: { stringValue: newDonor.district },
+                            city: { stringValue: newDonor.city },
+                            phone: { stringValue: newDonor.phone },
+                            email: { stringValue: newDonor.email },
+                            role: { stringValue: 'donor' },
+                            registeredAt: { timestampValue: new Date().toISOString() }
+                        }
+                    })
+                }).catch(() => {});
+            } catch (_) {}
 
             closeModal('registerModal');
             document.getElementById('donorRegisterForm').reset();
@@ -2900,6 +2986,25 @@
             fetchFirebaseDonors();
             window.addEventListener('lifelink:firebase-ready', () => fetchFirebaseDonors(), { once: true });
             window.addEventListener('lifelink:firebase-synced', () => fetchFirebaseDonors());
+
+            // Real-time broadcast channel across tabs
+            try {
+                const bc = new BroadcastChannel('lifelink_channel');
+                bc.onmessage = (event) => {
+                    if (event.data && event.data.type === 'DONOR_REGISTERED') {
+                        fetchFirebaseDonors();
+                    }
+                };
+            } catch (_) {}
+
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'lifelink_registered_donors' || e.key === 'lifelink_new_donor_broadcast' || e.key === 'lifelink_session') {
+                    fetchFirebaseDonors();
+                }
+            });
+
+            // Live periodic auto-sync with Firebase every 8s
+            setInterval(fetchFirebaseDonors, 8000);
         });
     </script>
 </body>

@@ -1187,6 +1187,26 @@
                     window.updateLifeLinkNavbar(registeredUser);
                 }
 
+                // Broadcast live to find-donors-map.html and other tabs immediately
+                if (currentAccountType === 'donor') {
+                    try {
+                        const channel = new BroadcastChannel('lifelink_channel');
+                        channel.postMessage({ type: 'DONOR_REGISTERED', donor: registeredUser });
+                        channel.close();
+                    } catch (_) {}
+
+                    try {
+                        localStorage.setItem('lifelink_new_donor_broadcast', JSON.stringify({
+                            donor: registeredUser,
+                            timestamp: Date.now()
+                        }));
+                    } catch (_) {}
+
+                    try {
+                        window.dispatchEvent(new CustomEvent('lifelink:donor-registered', { detail: registeredUser }));
+                    } catch (_) {}
+                }
+
                 showToast(`✓ Account registered in Firebase! Welcome ${fullName}.`, 'success');
                 submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Registered in Firebase! Redirecting...';
 

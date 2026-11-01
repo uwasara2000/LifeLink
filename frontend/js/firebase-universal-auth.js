@@ -302,6 +302,19 @@
                         else regList.unshift(profile);
                         localStorage.setItem('lifelink_registered_donors', JSON.stringify(regList));
                     } catch (_) {}
+
+                    try {
+                        localStorage.setItem('lifelink_new_donor_broadcast', JSON.stringify({
+                            donor: profile,
+                            timestamp: Date.now()
+                        }));
+                    } catch (_) {}
+
+                    try {
+                        const bc = new BroadcastChannel('lifelink_channel');
+                        bc.postMessage({ type: 'DONOR_REGISTERED', donor: profile });
+                        bc.close();
+                    } catch (_) {}
                 }
             }
 

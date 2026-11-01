@@ -19,6 +19,8 @@
     <script src="js/theme.js"></script>
     <!-- Google Maps API Key Config -->
     <script src="js/maps-config.js"></script>
+    <!-- Firebase Universal Auth & REST Engine (Supports file:/// and http://) -->
+    <script src="js/firebase-universal-auth.js"></script>
     <!-- Firebase Modular SDK -->
     <script type="module" src="js/firebase-config.js"></script>
 
@@ -871,14 +873,29 @@ function toggleMapProvider() {
     }
 }
 
-// ── 9. LOAD DONORS (FIRESTORE + REALTIME DATABASE + LOCAL HYDRATION) ───────
+// ── 9. LOAD DONORS (FIRESTORE + REALTIME DATABASE + REST + LOCAL HYDRATION) ───────
 let firebaseListenersBound = false;
+let pollingIntervalStarted = false;
+
+function parseFirestoreDoc(fields) {
+    if (!fields) return {};
+    const obj = {};
+    for (const [key, val] of Object.entries(fields)) {
+        if (!val) continue;
+        if ('stringValue' in val) obj[key] = val.stringValue;
+        else if ('integerValue' in val) obj[key] = parseInt(val.integerValue, 10);
+        else if ('doubleValue' in val) obj[key] = parseFloat(val.doubleValue);
+        else if ('booleanValue' in val) obj[key] = val.booleanValue;
+        else if ('timestampValue' in val) obj[key] = val.timestampValue;
+    }
+    return obj;
+}
 
 function parseDonorsFromDocs(docs) {
     const list = [];
     docs.forEach(doc => {
         const data = doc.data ? doc.data() : doc;
-        const uid = doc.id || data.uid;
+        const uid = doc.id || data.uid || data.id;
         
         // Resolve accurate coordinates
         let lat = (typeof data.latitude === 'number' && !isNaN(data.latitude)) ? data.latitude : null;
@@ -910,6 +927,73 @@ function parseDonorsFromDocs(docs) {
     return list;
 }
 
+function mergeIncomingDonors(incomingList, sourceLabel) {
+    if (!Array.isArray(incomingList) || incomingList.length === 0) return;
+
+    let hasNew = false;
+    let newlyAddedDonor = null;
+    const currentList = [...allDonors];
+    const storedSession = JSON.parse(localStorage.getItem('lifelink_session') || '{}');
+
+    incomingList.forEach(incoming => {
+        const uid = incoming.uid || incoming.id;
+        const existingIdx = currentList.findIndex(d => 
+            (uid && d.uid === uid) || 
+            (incoming.email && d.email && d.email.toLowerCase() === incoming.email.toLowerCase()) || 
+            (incoming.phone && d.phone && d.phone.replace(/\s+/g,'') === incoming.phone.replace(/\s+/g,''))
+        );
+
+        let lat = (typeof incoming.latitude === 'number' && !isNaN(incoming.latitude)) ? incoming.latitude : null;
+        let lng = (typeof incoming.longitude === 'number' && !isNaN(incoming.longitude)) ? incoming.longitude : null;
+        let hasGPS = Boolean(incoming.locationCaptured && lat && lng);
+
+        if (!lat || !lng) {
+            const c = SRI_LANKA_COORDS[incoming.city] || SRI_LANKA_COORDS[incoming.district] || [7.8731, 80.7718];
+            lat = c[0] + (Math.random() - 0.5) * 0.02;
+            lng = c[1] + (Math.random() - 0.5) * 0.02;
+        }
+
+        const isCurrent = Boolean(
+            (uid && storedSession.uid && uid === storedSession.uid) ||
+            (incoming.email && storedSession.email && incoming.email.toLowerCase() === storedSession.email.toLowerCase())
+        );
+        const rawName = incoming.name || incoming.fullName || 'Registered Donor';
+        const cleanName = isCurrent ? (rawName.replace(/\s*\(You\)/g, '') + ' (You)') : rawName;
+
+        const normalizedDonor = {
+            ...incoming,
+            uid: uid || ('fb_' + Math.random().toString(36).substr(2, 6)),
+            name: cleanName,
+            bloodGroup: incoming.bloodGroup || 'O+',
+            city: incoming.city || incoming.district || 'Colombo',
+            district: incoming.district || incoming.city || 'Colombo',
+            phone: incoming.phone || '',
+            email: incoming.email || '',
+            latitude: lat,
+            longitude: lng,
+            locationCaptured: hasGPS,
+            isLiveRegistered: true,
+            isCurrentUser: isCurrent,
+            available: incoming.available !== false
+        };
+
+        if (existingIdx >= 0) {
+            currentList[existingIdx] = { ...currentList[existingIdx], ...normalizedDonor };
+        } else {
+            currentList.unshift(normalizedDonor);
+            hasNew = true;
+            if (!newlyAddedDonor) newlyAddedDonor = normalizedDonor;
+        }
+    });
+
+    allDonors = currentList;
+    applyFilters();
+
+    if (hasNew && newlyAddedDonor && sourceLabel !== 'Hydration') {
+        showToast(`🔔 Donor registered: ${newlyAddedDonor.name} (${newlyAddedDonor.bloodGroup}) added to live map!`);
+    }
+}
+
 function hydrateInitialDonors() {
     const initialList = [];
 
@@ -921,7 +1005,7 @@ function hydrateInitialDonors() {
             if (user && (user.role === 'donor' || user.bloodGroup)) {
                 initialList.push({
                     uid: user.uid || 'current_user',
-                    name: (user.name || user.fullName || 'Registered Donor') + ' (You)',
+                    name: (user.name || user.fullName || 'Registered Donor').replace(/\s*\(You\)/g, '') + ' (You)',
                     bloodGroup: user.bloodGroup || 'O+',
                     city: user.city || 'Colombo',
                     district: user.district || user.city || 'Colombo',
@@ -981,77 +1065,76 @@ function hydrateInitialDonors() {
     applyFilters();
 }
 
+async function fetchFirebaseRestDonors() {
+    const apiKey = "AIzaSyDA3lBOZPMVvYs7iZVrwtdtPmv561ghAA0";
+    const projectId = "lifelink-e37cf";
+    const firestoreBase = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+    const donorsFromCloud = [];
+
+    // 1. Fetch from Firestore users collection
+    try {
+        const res = await fetch(`${firestoreBase}/users?key=${apiKey}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.documents) {
+                data.documents.forEach(doc => {
+                    const id = doc.name.split('/').pop();
+                    const parsed = parseFirestoreDoc(doc.fields);
+                    if (parsed && (parsed.role === 'donor' || parsed.bloodGroup)) {
+                        donorsFromCloud.push({ ...parsed, uid: id, id: id });
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.warn("Firestore REST users notice:", e);
+    }
+
+    // 2. Fetch from Firestore donors collection
+    try {
+        const res = await fetch(`${firestoreBase}/donors?key=${apiKey}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.documents) {
+                data.documents.forEach(doc => {
+                    const id = doc.name.split('/').pop();
+                    const parsed = parseFirestoreDoc(doc.fields);
+                    if (parsed) {
+                        donorsFromCloud.push({ ...parsed, uid: id, id: id });
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.warn("Firestore REST donors notice:", e);
+    }
+
+    // 3. Fetch from Realtime Database donors if public/cached auth
+    try {
+        const rtdbRes = await fetch(`https://lifelink-e37cf-default-rtdb.firebaseio.com/donors.json`);
+        if (rtdbRes.ok) {
+            const rtdbData = await rtdbRes.json();
+            if (rtdbData && typeof rtdbData === 'object' && !rtdbData.error) {
+                Object.keys(rtdbData).forEach(k => {
+                    if (rtdbData[k]) {
+                        donorsFromCloud.push({ ...rtdbData[k], uid: rtdbData[k].uid || rtdbData[k].id || k });
+                    }
+                });
+            }
+        }
+    } catch (_) {}
+
+    if (donorsFromCloud.length > 0) {
+        mergeIncomingDonors(donorsFromCloud, 'Firebase Cloud');
+    }
+}
+
 function bindFirebaseDonors(fb) {
     if (!fb || firebaseListenersBound) return;
     firebaseListenersBound = true;
     console.log("LifeLink: Attaching real-time Firebase donor synchronizers...");
 
     const { rtdb, ref, onValue, db, collection, onSnapshot, query, where, getDocs } = fb;
-
-    function mergeIncomingDonors(incomingList, sourceLabel) {
-        if (!Array.isArray(incomingList) || incomingList.length === 0) return;
-
-        let hasNew = false;
-        const currentList = [...allDonors];
-        const storedSession = JSON.parse(localStorage.getItem('lifelink_session') || '{}');
-
-        incomingList.forEach(incoming => {
-            const uid = incoming.uid || incoming.id;
-            const existingIdx = currentList.findIndex(d => 
-                (uid && d.uid === uid) || 
-                (incoming.email && d.email === incoming.email) || 
-                (incoming.phone && d.phone === incoming.phone)
-            );
-
-            let lat = (typeof incoming.latitude === 'number' && !isNaN(incoming.latitude)) ? incoming.latitude : null;
-            let lng = (typeof incoming.longitude === 'number' && !isNaN(incoming.longitude)) ? incoming.longitude : null;
-            let hasGPS = Boolean(incoming.locationCaptured && lat && lng);
-
-            if (!lat || !lng) {
-                const c = SRI_LANKA_COORDS[incoming.city] || SRI_LANKA_COORDS[incoming.district] || [7.8731, 80.7718];
-                lat = c[0] + (Math.random() - 0.5) * 0.02;
-                lng = c[1] + (Math.random() - 0.5) * 0.02;
-            }
-
-            const isCurrent = Boolean(
-                (uid && uid === storedSession.uid) ||
-                (incoming.email && incoming.email === storedSession.email)
-            );
-            const rawName = incoming.name || incoming.fullName || 'Registered Donor';
-            const cleanName = isCurrent ? (rawName.replace(/\s*\(You\)/, '') + ' (You)') : rawName;
-
-            const normalizedDonor = {
-                ...incoming,
-                uid: uid || ('fb_' + Math.random().toString(36).substr(2, 6)),
-                name: cleanName,
-                bloodGroup: incoming.bloodGroup || 'O+',
-                city: incoming.city || incoming.district || 'Colombo',
-                district: incoming.district || incoming.city || 'Colombo',
-                phone: incoming.phone || '',
-                email: incoming.email || '',
-                latitude: lat,
-                longitude: lng,
-                locationCaptured: hasGPS,
-                isLiveRegistered: true,
-                isCurrentUser: isCurrent,
-                available: incoming.available !== false
-            };
-
-            if (existingIdx >= 0) {
-                currentList[existingIdx] = { ...currentList[existingIdx], ...normalizedDonor };
-            } else {
-                currentList.unshift(normalizedDonor);
-                hasNew = true;
-            }
-        });
-
-        allDonors = currentList;
-        applyFilters();
-
-        if (hasNew) {
-            showToast(`✓ Live registered donors synced from ${sourceLabel}!`);
-        }
-    }
 
     // A. Realtime Database /donors
     if (rtdb && ref && onValue) {
@@ -1133,9 +1216,18 @@ function loadDonors() {
     // 1. Initial immediate local hydration so page is NEVER blank or stuck in spinner
     hydrateInitialDonors();
 
-    // 2. Connect to Firebase if already loaded
+    // 2. Query Firebase Cloud Firestore & RTDB REST APIs
+    fetchFirebaseRestDonors();
+
+    // 3. Connect to Firebase SDK real-time listeners if ready
     if (window.LifeLinkFirebase) {
         bindFirebaseDonors(window.LifeLinkFirebase);
+    }
+
+    // 4. Start periodic auto-update polling (every 6 seconds) for continuous live sync
+    if (!pollingIntervalStarted) {
+        pollingIntervalStarted = true;
+        setInterval(fetchFirebaseRestDonors, 6000);
     }
 }
 
@@ -1691,19 +1783,19 @@ function showToast(msg, dur = 4000) {
 
 // ── 20. THEME SWITCHER ───────────────────────────────────────────
 function setupThemeToggle() {
-    const btn = document.getElementById('theme-btn');
-    const icon = document.getElementById('theme-icon');
+    const btn = document.getElementById('themeToggleBtn') || document.getElementById('theme-btn');
     const updateIcon = () => {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-        if (isGoogleMapsActive && gmap) gmap.setOptions({ styles: getGoogleMapStyles() });
+        try {
+            if (isGoogleMapsActive && gmap) gmap.setOptions({ styles: getGoogleMapStyles() });
+        } catch (_) {}
     };
-    updateIcon();
-    btn.addEventListener('click', () => {
-        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('lifelink_theme', next);
-        updateIcon();
+    if (btn) {
+        btn.addEventListener('click', () => {
+            setTimeout(updateIcon, 60);
+        });
+    }
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'lifelink_theme') updateIcon();
     });
 }
 
@@ -1777,14 +1869,25 @@ function loadGoogleMapsScript() {
 }
 
 // ── 23. BOOTSTRAP ─────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    setupThemeToggle();
-    populateDistricts();
-    wireEvents();
-    loadDonors(); // Immediate data hydration (<50ms)! No more infinite spinner!
-    loadGoogleMapsScript();
+function initFindDonorsMapPage() {
+    try { setupThemeToggle(); } catch (e) { console.warn("Theme setup notice:", e); }
+    try { populateDistricts(); } catch (e) { console.warn("Districts populate notice:", e); }
+    try { wireEvents(); } catch (e) { console.warn("Wire events notice:", e); }
+    try { loadDonors(); } catch (e) { console.warn("Load donors notice:", e); }
+    try { loadGoogleMapsScript(); } catch (e) { console.warn("Load maps script notice:", e); }
 
-    // Attach listeners for when Firebase is ready
+    // Real-time broadcast channel across tabs for instant donor registration detection
+    try {
+        const liveChannel = new BroadcastChannel('lifelink_channel');
+        liveChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'DONOR_REGISTERED' && event.data.donor) {
+                console.log("LifeLink: Real-time broadcast received for newly registered donor:", event.data.donor);
+                mergeIncomingDonors([event.data.donor], 'Live Broadcast');
+            }
+        };
+    } catch (_) {}
+
+    // Attach listeners for when Firebase Modular SDK is ready
     window.addEventListener('lifelink:firebase-ready', (e) => {
         bindFirebaseDonors(e.detail || window.LifeLinkFirebase);
     });
@@ -1792,13 +1895,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.LifeLinkFirebase) bindFirebaseDonors(window.LifeLinkFirebase);
     });
 
-    // Listen to localStorage changes in other tabs (e.g. user registered as donor in signup tab)
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'lifelink_registered_donors' || e.key === 'lifelink_session') {
-            loadDonors();
+    // Custom event for donor registered in same window/session
+    window.addEventListener('lifelink:donor-registered', (e) => {
+        if (e.detail) {
+            mergeIncomingDonors([e.detail], 'Live Event');
         }
     });
-});
+
+    // Listen to localStorage changes in other tabs (e.g. user registered as donor in signup tab)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'lifelink_registered_donors' || e.key === 'lifelink_session' || e.key === 'lifelink_new_donor_broadcast') {
+            try {
+                if (e.key === 'lifelink_new_donor_broadcast' && e.newValue) {
+                    const bcData = JSON.parse(e.newValue);
+                    if (bcData && bcData.donor) {
+                        mergeIncomingDonors([bcData.donor], 'Storage Broadcast');
+                        return;
+                    }
+                }
+            } catch (_) {}
+            hydrateInitialDonors();
+            fetchFirebaseRestDonors();
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFindDonorsMapPage);
+} else {
+    initFindDonorsMapPage();
+}
 </script>
 </body>
 </html>

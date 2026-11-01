@@ -105,6 +105,19 @@ export async function registerUser({ fullName, email, password, phone, city, rol
                 else regList.unshift(localSession);
                 localStorage.setItem('lifelink_registered_donors', JSON.stringify(regList));
             } catch (_) {}
+
+            try {
+                localStorage.setItem('lifelink_new_donor_broadcast', JSON.stringify({
+                    donor: localSession,
+                    timestamp: Date.now()
+                }));
+            } catch (_) {}
+
+            try {
+                const bc = new BroadcastChannel('lifelink_channel');
+                bc.postMessage({ type: 'DONOR_REGISTERED', donor: localSession });
+                bc.close();
+            } catch (_) {}
         }
     }
     if (typeof window !== "undefined") {
